@@ -1,0 +1,11 @@
+Name: user-api
+Host: 0.0.0.0
+Port: 8888
+# 新增：配置 RPC 客户端目标地址
+UserRpc:
+  Target: 127.0.0.1:8080
+
+# 新增：JWT 认证配置
+Auth:
+  AccessSecret: "miniblog-super-secret-key" # 你的签名秘钥
+  AccessExpire: 86400                       # Token 有效期 (秒)，86400是一天

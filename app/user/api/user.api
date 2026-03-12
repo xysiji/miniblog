@@ -1,0 +1,33 @@
+syntax = "v1"
+
+type (
+	RegisterReq {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	RegisterResp {
+		UserId int64 `json:"userId"`
+	}
+	// 新增：登录请求与响应体
+	LoginReq {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	LoginResp {
+		UserId int64  `json:"userId"`
+		Token  string `json:"token"`
+	}
+)
+
+@server (
+	prefix: /v1/user
+)
+service user-api {
+	@handler RegisterHandler
+	post /register (RegisterReq) returns (RegisterResp)
+
+	// 新增：登录接口
+	@handler LoginHandler
+	post /login (LoginReq) returns (LoginResp)
+}
+

@@ -1,0 +1,25 @@
+# Go build
+bin/
+*.exe
+*.test
+
+# dependency
+vendor/
+
+# logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# database runtime data
+deploy/mysql/data/
+
+# temp
+tmp/

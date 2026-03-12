@@ -1,0 +1,10 @@
+Name: post-api
+Host: 0.0.0.0
+Port: 8889
+# 指向本地的 Post RPC
+PostRpc:
+  Target: 127.0.0.1:8081
+# 核心鉴权：秘钥必须和 User 服务一模一样，否则无法解析 Token
+Auth:
+  AccessSecret: "miniblog-super-secret-key"
+  AccessExpire: 86400

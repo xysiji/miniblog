@@ -1,0 +1,16 @@
+Name: user.rpc
+ListenOn: 0.0.0.0:8080
+
+#数据库和redis配置
+DataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: ""
+
+##先注释掉，用直连(单机版)，本地
+#服务注册中心配置
+
+# Etcd:
+#   Hosts:
+#   - 127.0.0.1:2379
+#   Key: user.rpc

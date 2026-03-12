@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package post;
+option go_package = "./post";
+
+// --- 原有的发布相关结构 ---
+message PublishRequest {
+  int64 user_id = 1;
+  string content = 2;
+}
+
+message PublishResponse {
+  int64 post_id = 1;
+}
+
+// --- 新增：获取列表相关结构 ---
+message ListRequest {
+  int64 page = 1;      // 第几页
+  int64 page_size = 2; // 每页大小
+}
+
+message PostItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  string content = 3;
+  int64 create_time = 4; // 底层使用时间戳传递
+}
+
+message ListResponse {
+  repeated PostItem list = 1; // repeated 相当于 Go 里的切片 (Slice)
+  int64 total = 2;
+}
+
+// 内部博文业务服务
+service Post {
+  rpc Publish(PublishRequest) returns(PublishResponse);
+  
+  // 新增：内部获取列表的 RPC 方法
+  rpc List(ListRequest) returns(ListResponse);
+}

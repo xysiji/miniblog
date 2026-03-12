@@ -1,0 +1,45 @@
+syntax = "v1"
+
+// 发布相关的结构体
+type (
+	PublishReq {
+		Content string `json:"content"`
+	}
+	PublishResp {
+		PostId int64 `json:"postId"`
+	}
+)
+
+// 新增：列表相关的结构体 (支持分页)
+type (
+	PostItem {
+		Id       int64  `json:"id"`
+		UserId   int64  `json:"userId"`
+		Content  string `json:"content"`
+		CreateAt string `json:"createAt"` // 返回友好的时间格式
+	}
+	ListReq {
+		Page     int64 `json:"page"` // 第几页
+		PageSize int64 `json:"pageSize"` // 每页多少条
+	}
+	ListResp {
+		List  []PostItem `json:"list"` // 博文数组
+		Total int64      `json:"total"` // 总条数
+	}
+)
+
+@server (
+	prefix: /v1/post
+	jwt:    Auth
+)
+service post-api {
+	@doc "发布微型博客"
+	@handler PublishHandler
+	post /publish (PublishReq) returns (PublishResp)
+
+	// 新增：获取微型博客列表接口
+	@doc "获取微型博客列表"
+	@handler ListHandler
+	post /list (ListReq) returns (ListResp)
+}
+
