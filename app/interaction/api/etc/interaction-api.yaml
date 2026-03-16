@@ -1,0 +1,14 @@
+Name: interaction-api
+Host: 0.0.0.0
+Port: 8890
+
+# JWT 鉴权配置（必须与 user-api 和 post-api 保持一致）
+Auth:
+  AccessSecret: miniblog-super-secret-key
+  AccessExpire: 86400
+
+# 关联后端的 RPC 服务节点
+InteractionRpc:
+  Endpoints:
+    - 127.0.0.1:8082
+  NonBlock: true

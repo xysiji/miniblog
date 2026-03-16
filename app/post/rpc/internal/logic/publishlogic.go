@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
+	"time" // 新增：为了获取当前时间戳作为 Redis ZSet 的分数
 
 	"miniblog/app/post/model"
 	"miniblog/app/post/rpc/internal/svc"
@@ -46,7 +47,21 @@ func (l *PublishLogic) Publish(in *post.PublishRequest) (*post.PublishResponse, 
 		return nil, fmt.Errorf("博文插入数据库失败: %v", err)
 	}
 
-	// 3. 返回生成的 PostId
+	// ==========================================
+	// 本次新增核心逻辑：3. 同步写入 Redis Timeline
+	// ==========================================
+	// 使用 Redis 的 ZSet (有序集合)，按时间戳排序
+	timelineKey := "biz:post:global_timeline"
+	// 将博文 ID 转为字符串存入 Redis，分数为当前 Unix 时间戳
+	_, err = l.svcCtx.BizRedis.ZaddCtx(l.ctx, timelineKey, time.Now().Unix(), fmt.Sprintf("%d", postId))
+	if err != nil {
+		// 缓存降级：就算 Redis 挂了，博文已经发到 MySQL 了，不能阻断用户，所以只打 Error 日志不 return err
+		l.Logger.Errorf("【缓存警告】博文 %d 写入 Redis Timeline 失败: %v", postId, err)
+	} else {
+		l.Logger.Infof("博文 %d 已成功推送到全局 Timeline", postId)
+	}
+
+	// 4. 返回生成的 PostId
 	return &post.PublishResponse{
 		PostId: postId,
 	}, nil

@@ -1,0 +1,28 @@
+syntax = "v1"
+
+type (
+	LikeReq {
+		PostId int64 `json:"post_id"`
+	}
+	LikeResp  {}
+	CommentReq {
+		PostId  int64  `json:"post_id"`
+		Content string `json:"content"`
+	}
+	CommentResp {
+		CommentId int64 `json:"comment_id"`
+	}
+)
+
+@server (
+	prefix: /v1/interaction
+	jwt:    Auth // 开启 JWT 鉴权，必须携带 Token 才能访问
+)
+service interaction-api {
+	@handler LikeHandler
+	post /like (LikeReq) returns (LikeResp)
+
+	@handler CommentHandler
+	post /comment (CommentReq) returns (CommentResp)
+}
+

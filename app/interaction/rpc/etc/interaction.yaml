@@ -1,0 +1,12 @@
+Name: interaction.rpc
+ListenOn: 0.0.0.0:8082
+# 数据库与缓存配置
+DataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: ""
+# 业务 Redis 配置（用于高并发点赞拦截和计数）
+BizRedis:
+  Host: 127.0.0.1:6379
+  Type: node
+  Pass: ""
