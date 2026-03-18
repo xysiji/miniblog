@@ -26,7 +26,7 @@ func NewCommentLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CommentLo
 }
 
 func (l *CommentLogic) Comment(req *types.CommentReq) (resp *types.CommentResp, err error) {
-	// 1. 获取当前登录用户的 ID
+	// 1. 获取当前登录用户的 ID (兼容多种 JWT 设置)
 	userIdNumber, ok := l.ctx.Value("jwtUserId").(json.Number)
 	var userId int64
 	if ok {

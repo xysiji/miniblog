@@ -3,13 +3,32 @@
 
 package types
 
+type CommentItem struct {
+	Id         int64  `json:"id"`
+	PostId     int64  `json:"post_id"`
+	UserId     int64  `json:"user_id"`
+	Content    string `json:"content"`
+	CreateTime int64  `json:"create_time"`
+}
+
+type CommentListReq struct {
+	PostId   int64 `json:"post_id"`
+	Page     int64 `json:"page,optional"`      // 当前页码
+	PageSize int64 `json:"page_size,optional"` // 每页条数
+}
+
+type CommentListResp struct {
+	List  []CommentItem `json:"list"`
+	Total int64         `json:"total"`
+}
+
 type CommentReq struct {
 	PostId  int64  `json:"post_id"`
 	Content string `json:"content"`
 }
 
 type CommentResp struct {
-	CommentId int64 `json:"comment_id"`
+	CommentId int64 `json:"comment_id"` //
 }
 
 type LikeReq struct {

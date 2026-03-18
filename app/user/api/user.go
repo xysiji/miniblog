@@ -23,7 +23,9 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	server := rest.MustNewServer(c.RestConf)
+	//	server := rest.MustNewServer(c.RestConf)
+	// 加上 rest.WithCors() 允许所有跨域请求
+	server := rest.MustNewServer(c.RestConf, rest.WithCors())
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)

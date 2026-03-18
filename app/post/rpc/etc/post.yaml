@@ -1,15 +1,20 @@
+
 Name: post.rpc
 ListenOn: 0.0.0.0:8081
-# 数据库与缓存配置
-DataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+
+# 【分布式存储架构配置区】
+# 1. MySQL 主从读写分离节点 (开发环境暂指本地同一库模拟，生产环境改为不同IP集群)
+MasterDataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+SlaveDataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+
+# 2. Redis 多级缓存节点
 CacheRedis:
   - Host: 127.0.0.1:6379
     Pass: ""
-# 新增：这是给我们的业务逻辑层 (BizLogic) 专门独立使用的 Redis
 BizRedis:
   Host: 127.0.0.1:6379
-  Type: node
   Pass: ""
+  Type: node
 ##先搞单机
 # Etcd:
 #   Hosts:

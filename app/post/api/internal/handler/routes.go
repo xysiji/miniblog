@@ -20,6 +20,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/list",
 				Handler: ListHandler(serverCtx),
 			},
+		},
+		rest.WithPrefix("/v1/post"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
 			{
 				// 发布微型博客
 				Method:  http.MethodPost,

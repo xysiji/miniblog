@@ -2,7 +2,8 @@ package logic
 
 import (
 	"context"
-	"strconv" // 新增：用于将 Redis 里取出的字符串 ID 转换为 int64
+	"fmt"
+	"strconv"
 
 	"miniblog/app/post/rpc/internal/svc"
 	"miniblog/app/post/rpc/post"
@@ -24,86 +25,78 @@ func NewListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListLogic {
 	}
 }
 
-// 内部获取列表的 RPC 方法 (多级缓存改造版)
+// List 获取微型博客列表 (支持多级缓存与读写分离)
 func (l *ListLogic) List(in *post.ListRequest) (*post.ListResponse, error) {
-	// 1. 参数防御与默认值设置
-	if in.Page < 1 {
-		in.Page = 1
-	}
-	if in.PageSize <= 0 {
-		in.PageSize = 10
-	}
+	// 1. 定义 Timeline 的 Redis Key
+	timelineKey := "biz:post:timeline:global"
 
-	// 2. 第一步：先查总条数 (暂时直接查 MySQL)
-	total, err := l.svcCtx.PostModel.Count(l.ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 3. 如果总数为 0，直接短路返回
-	if total == 0 {
-		return &post.ListResponse{
-			List:  []*post.PostItem{},
-			Total: 0,
-		}, nil
-	}
-
-	// ==========================================
-	// 本次新增核心逻辑：4. 多级缓存读取机制
-	// ==========================================
-	timelineKey := "biz:post:global_timeline"
+	// 2. 计算 Redis ZSet 的分页参数 (0-based)
 	start := (in.Page - 1) * in.PageSize
 	stop := start + in.PageSize - 1
 
-	var respList []*post.PostItem
+	// 3. 从 Redis 极速拉取当前页的博文 ID 列表 (按时间倒序)
+	postIdsStrs, err := l.svcCtx.BizRedis.ZrevrangeCtx(l.ctx, timelineKey, start, stop)
+	if err != nil {
+		l.Logger.Errorf("读取 Timeline 缓存失败，准备降级: %v", err)
+	}
 
-	// 第一级缓存：尝试从业务 Redis ZSet 中获取当前页的博文 ID 列表
-	redisIds, err := l.svcCtx.BizRedis.ZrevrangeCtx(l.ctx, timelineKey, start, stop)
+	// 4. 获取 Timeline 中的总博文数，用于前端分页
+	totalCount, _ := l.svcCtx.BizRedis.ZcardCtx(l.ctx, timelineKey)
 
-	if err == nil && len(redisIds) > 0 {
-		// 【缓存命中分支】
-		l.Logger.Infof("Timeline 命中 Redis 缓存, 获取到 %d 条 ID", len(redisIds))
+	var list []*post.PostItem
 
-		for _, idStr := range redisIds {
-			id, parseErr := strconv.ParseInt(idStr, 10, 64)
-			if parseErr != nil {
-				continue
-			}
+	if len(postIdsStrs) > 0 {
+		l.Logger.Infof("Timeline 命中缓存, 获取到 %d 条 ID", len(postIdsStrs))
 
-			// 第二级缓存：FindOne 底层会自动走 go-zero 的 Redis 行级缓存 (sqlc)
-			// 此时框架会自动拦截，如果行缓存里有这篇博文，直接返回；如果没有，它会查 MySQL 并写回缓存。
-			p, findErr := l.svcCtx.PostModel.FindOne(l.ctx, id)
-			if findErr == nil && p != nil {
-				respList = append(respList, &post.PostItem{
-					Id:         p.Id,
-					UserId:     p.UserId,
-					Content:    p.Content,
-					CreateTime: p.CreateTime.Unix(),
+		// 5. 遍历缓存中的 ID，去数据库查询完整信息
+		for _, idStr := range postIdsStrs {
+			postId, _ := strconv.ParseInt(idStr, 10, 64)
+
+			// 6. 【分布式架构核心】：读操作回源查询时，路由到 Slave 从库
+			postInfo, err := l.svcCtx.PostSlaveModel.FindOne(l.ctx, postId)
+			if err == nil && postInfo != nil {
+				list = append(list, &post.PostItem{
+					Id:         postInfo.Id,
+					UserId:     postInfo.UserId,
+					Content:    postInfo.Content,
+					CreateTime: postInfo.CreateTime.Unix(),
 				})
 			}
 		}
 	} else {
-		// 【缓存穿透/未命中分支（降级回源 MySQL）】
-		l.Logger.Infof("Timeline 缓存未命中或为空，降级查询 MySQL")
+		l.Logger.Infof("🚨 Timeline 未命中！触发从库降级扫描 (Fallback to MySQL)")
 
-		posts, findErr := l.svcCtx.PostModel.FindPageListByPage(l.ctx, in.Page, in.PageSize)
-		if findErr != nil {
-			return nil, findErr
+		// 【修复1】：兜底查询：从 MySQL 查总数
+		dbCount, err := l.svcCtx.PostSlaveModel.Count(l.ctx)
+		if err == nil {
+			totalCount = int(dbCount)
 		}
 
-		for _, p := range posts {
-			respList = append(respList, &post.PostItem{
+		// 【修复2】：兜底查询：从 MySQL 查当前页的列表
+		dbPosts, err := l.svcCtx.PostSlaveModel.FindPageListByPage(l.ctx, in.Page, in.PageSize)
+		if err != nil {
+			l.Logger.Errorf("降级查询 MySQL 失败: %v", err)
+			return nil, fmt.Errorf("获取列表失败，底层服务异常")
+		}
+
+		// 【修复3】：组装数据，并【重建 Redis 缓存】
+		for _, p := range dbPosts {
+			list = append(list, &post.PostItem{
 				Id:         p.Id,
 				UserId:     p.UserId,
 				Content:    p.Content,
 				CreateTime: p.CreateTime.Unix(),
 			})
+
+			// 缓存预热：把从 MySQL 查出的数据，重新塞回 Redis 的 ZSet 中
+			// Score 用创建时间戳，Value 用博文 ID
+			_, _ = l.svcCtx.BizRedis.ZaddCtx(l.ctx, timelineKey, p.CreateTime.Unix(), strconv.FormatInt(p.Id, 10))
 		}
+		l.Logger.Infof("✅ 缓存重建完毕，共恢复 %d 条数据至 Redis", len(dbPosts))
 	}
 
-	// 5. 返回最终拼装好的结果集
 	return &post.ListResponse{
-		List:  respList,
-		Total: total,
+		List:  list,
+		Total: int64(totalCount),
 	}, nil
 }

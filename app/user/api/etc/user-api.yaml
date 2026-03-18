@@ -7,5 +7,5 @@ UserRpc:
 
 # 新增：JWT 认证配置
 Auth:
-  AccessSecret: "miniblog-super-secret-key" # 你的签名秘钥
-  AccessExpire: 86400                       # Token 有效期 (秒)，86400是一天
+  AccessSecret: u7x9A2f8P5vQ3mR1wT6kY4zL0bC9eD2h # 👈 确保这里被替换
+  AccessExpire: 86400

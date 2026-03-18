@@ -34,3 +34,9 @@ func (s *InteractionServer) Comment(ctx context.Context, in *interaction.Comment
 	l := logic.NewCommentLogic(ctx, s.svcCtx)
 	return l.Comment(in)
 }
+
+// 获取评论列表
+func (s *InteractionServer) CommentList(ctx context.Context, in *interaction.CommentListRequest) (*interaction.CommentListResponse, error) {
+	l := logic.NewCommentListLogic(ctx, s.svcCtx)
+	return l.CommentList(in)
+}

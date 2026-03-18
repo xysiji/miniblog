@@ -5,24 +5,63 @@ type (
 		PostId int64 `json:"post_id"`
 	}
 	LikeResp  {}
+)
+
+// ==========================
+// 新增：评论相关的结构体
+// ==========================
+type (
 	CommentReq {
 		PostId  int64  `json:"post_id"`
 		Content string `json:"content"`
 	}
 	CommentResp {
-		CommentId int64 `json:"comment_id"`
+		CommentId int64 `json:"comment_id"` //
+	}
+	CommentItem {
+		Id         int64  `json:"id"`
+		PostId     int64  `json:"post_id"`
+		UserId     int64  `json:"user_id"`
+		Content    string `json:"content"`
+		CreateTime int64  `json:"create_time"`
+	}
+	CommentListReq {
+		PostId   int64 `json:"post_id"`
+		Page     int64 `json:"page,optional"` // 当前页码
+		PageSize int64 `json:"page_size,optional"` // 每页条数
+	}
+	CommentListResp {
+		List  []CommentItem `json:"list"`
+		Total int64         `json:"total"`
 	}
 )
 
+// ==========================
+// 1. 【公开路由组】所有人都能看评论
+// ==========================
 @server (
 	prefix: /v1/interaction
-	jwt:    Auth // 开启 JWT 鉴权，必须携带 Token 才能访问
 )
 service interaction-api {
-	@handler LikeHandler
+	@doc "获取博文的评论列表"
+	@handler CommentList
+	post /comment/list (CommentListReq) returns (CommentListResp)
+}
+
+// ==========================
+// 2. 【私密路由组】点赞和发评论必须登录携带 Token
+// ==========================
+@server (
+	prefix: /v1/interaction
+	jwt:    Auth
+)
+service interaction-api {
+	@doc "点赞"
+	@handler Like
 	post /like (LikeReq) returns (LikeResp)
 
-	@handler CommentHandler
+	@doc "发表评论"
+	@handler Comment
 	post /comment (CommentReq) returns (CommentResp)
 }
 

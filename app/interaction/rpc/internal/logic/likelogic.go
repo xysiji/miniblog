@@ -8,7 +8,10 @@ import (
 	"miniblog/app/interaction/rpc/interaction"
 	"miniblog/app/interaction/rpc/internal/svc"
 
+	"miniblog/app/notice/rpc/notice" // 引入 notice 协议
+
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 )
 
 type LikeLogic struct {
@@ -66,6 +69,26 @@ func (l *LikeLogic) Like(in *interaction.LikeRequest) (*interaction.LikeResponse
 		l.Logger.Errorf("【警告】点赞任务推入 MQ 失败: %v", err)
 	} else {
 		l.Logger.Infof("=> [RPC逻辑层] 点赞成功，底层任务已悄悄塞入队列！(UserId:%d)", in.UserId)
+	}
+	// ======== 【精确插入：触发异步通知】 ========
+	postInfo, err := l.svcCtx.PostModel.FindOne(l.ctx, in.PostId)
+	if err == nil && postInfo != nil {
+		// 使用 threading.GoSafe 开启安全的后台异步协程，不阻塞当前点赞响应
+		threading.GoSafe(func() {
+			_, noticeErr := l.svcCtx.NoticeRpc.CreateNotice(context.Background(), &notice.CreateNoticeReq{
+				UserId:  postInfo.UserId, // 发给谁（这篇博文的作者）
+				ActorId: in.UserId,       // 谁点的赞（当前操作者）
+				PostId:  in.PostId,       // 哪篇博文
+				Type:    1,               // 1代表点赞类型
+			})
+			if noticeErr != nil {
+				logx.Errorf("异步发送点赞通知失败: %v", noticeErr)
+			} else {
+				logx.Infof("异步点赞通知发送成功! 给用户 %d", postInfo.UserId)
+			}
+		})
+	} else {
+		l.Logger.Errorf("未能查询到博文作者信息，跳过发送通知, postId: %d", in.PostId)
 	}
 
 	return &interaction.LikeResponse{}, nil

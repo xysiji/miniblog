@@ -6,5 +6,5 @@ PostRpc:
   Target: 127.0.0.1:8081
 # 核心鉴权：秘钥必须和 User 服务一模一样，否则无法解析 Token
 Auth:
-  AccessSecret: "miniblog-super-secret-key"
+  AccessSecret: u7x9A2f8P5vQ3mR1wT6kY4zL0bC9eD2h # 👈 必须统一
   AccessExpire: 86400

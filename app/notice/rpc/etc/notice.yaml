@@ -1,0 +1,6 @@
+Name: notice.rpc
+ListenOn: 0.0.0.0:8083 # 分配 8083 端口给通知内部服务
+DataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: ""

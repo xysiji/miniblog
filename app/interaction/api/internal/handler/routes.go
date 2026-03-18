@@ -15,11 +15,25 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 获取博文的评论列表
+				Method:  http.MethodPost,
+				Path:    "/comment/list",
+				Handler: CommentListHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/v1/interaction"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 发表评论
 				Method:  http.MethodPost,
 				Path:    "/comment",
 				Handler: CommentHandler(serverCtx),
 			},
 			{
+				// 点赞
 				Method:  http.MethodPost,
 				Path:    "/like",
 				Handler: LikeHandler(serverCtx),

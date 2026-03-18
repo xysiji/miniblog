@@ -215,6 +215,195 @@ func (x *CommentResponse) GetCommentId() int64 {
 	return 0
 }
 
+// --- 新增：评论列表相关 ---
+type CommentItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	PostId        int64                  `protobuf:"varint,2,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	CreateTime    int64                  `protobuf:"varint,5,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommentItem) Reset() {
+	*x = CommentItem{}
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommentItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommentItem) ProtoMessage() {}
+
+func (x *CommentItem) ProtoReflect() protoreflect.Message {
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommentItem.ProtoReflect.Descriptor instead.
+func (*CommentItem) Descriptor() ([]byte, []int) {
+	return file_app_interaction_rpc_interaction_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CommentItem) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *CommentItem) GetPostId() int64 {
+	if x != nil {
+		return x.PostId
+	}
+	return 0
+}
+
+func (x *CommentItem) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *CommentItem) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *CommentItem) GetCreateTime() int64 {
+	if x != nil {
+		return x.CreateTime
+	}
+	return 0
+}
+
+type CommentListRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PostId        int64                  `protobuf:"varint,1,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	Page          int64                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize      int64                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommentListRequest) Reset() {
+	*x = CommentListRequest{}
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommentListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommentListRequest) ProtoMessage() {}
+
+func (x *CommentListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommentListRequest.ProtoReflect.Descriptor instead.
+func (*CommentListRequest) Descriptor() ([]byte, []int) {
+	return file_app_interaction_rpc_interaction_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CommentListRequest) GetPostId() int64 {
+	if x != nil {
+		return x.PostId
+	}
+	return 0
+}
+
+func (x *CommentListRequest) GetPage() int64 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *CommentListRequest) GetPageSize() int64 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type CommentListResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	List          []*CommentItem         `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommentListResponse) Reset() {
+	*x = CommentListResponse{}
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommentListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommentListResponse) ProtoMessage() {}
+
+func (x *CommentListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_interaction_rpc_interaction_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommentListResponse.ProtoReflect.Descriptor instead.
+func (*CommentListResponse) Descriptor() ([]byte, []int) {
+	return file_app_interaction_rpc_interaction_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CommentListResponse) GetList() []*CommentItem {
+	if x != nil {
+		return x.List
+	}
+	return nil
+}
+
+func (x *CommentListResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 var File_app_interaction_rpc_interaction_proto protoreflect.FileDescriptor
 
 const file_app_interaction_rpc_interaction_proto_rawDesc = "" +
@@ -230,10 +419,25 @@ const file_app_interaction_rpc_interaction_proto_rawDesc = "" +
 	"\acontent\x18\x03 \x01(\tR\acontent\"0\n" +
 	"\x0fCommentResponse\x12\x1d\n" +
 	"\n" +
-	"comment_id\x18\x01 \x01(\x03R\tcommentId2\x90\x01\n" +
+	"comment_id\x18\x01 \x01(\x03R\tcommentId\"\x8a\x01\n" +
+	"\vCommentItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
+	"\apost_id\x18\x02 \x01(\x03R\x06postId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\x03R\x06userId\x12\x18\n" +
+	"\acontent\x18\x04 \x01(\tR\acontent\x12\x1f\n" +
+	"\vcreate_time\x18\x05 \x01(\x03R\n" +
+	"createTime\"^\n" +
+	"\x12CommentListRequest\x12\x17\n" +
+	"\apost_id\x18\x01 \x01(\x03R\x06postId\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x03R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x03 \x01(\x03R\bpageSize\"Y\n" +
+	"\x13CommentListResponse\x12,\n" +
+	"\x04list\x18\x01 \x03(\v2\x18.interaction.CommentItemR\x04list\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total2\xe2\x01\n" +
 	"\vInteraction\x12;\n" +
 	"\x04Like\x12\x18.interaction.LikeRequest\x1a\x19.interaction.LikeResponse\x12D\n" +
-	"\aComment\x12\x1b.interaction.CommentRequest\x1a\x1c.interaction.CommentResponseB\x0fZ\r./interactionb\x06proto3"
+	"\aComment\x12\x1b.interaction.CommentRequest\x1a\x1c.interaction.CommentResponse\x12P\n" +
+	"\vCommentList\x12\x1f.interaction.CommentListRequest\x1a .interaction.CommentListResponseB\x0fZ\r./interactionb\x06proto3"
 
 var (
 	file_app_interaction_rpc_interaction_proto_rawDescOnce sync.Once
@@ -247,23 +451,29 @@ func file_app_interaction_rpc_interaction_proto_rawDescGZIP() []byte {
 	return file_app_interaction_rpc_interaction_proto_rawDescData
 }
 
-var file_app_interaction_rpc_interaction_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_app_interaction_rpc_interaction_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_app_interaction_rpc_interaction_proto_goTypes = []any{
-	(*LikeRequest)(nil),     // 0: interaction.LikeRequest
-	(*LikeResponse)(nil),    // 1: interaction.LikeResponse
-	(*CommentRequest)(nil),  // 2: interaction.CommentRequest
-	(*CommentResponse)(nil), // 3: interaction.CommentResponse
+	(*LikeRequest)(nil),         // 0: interaction.LikeRequest
+	(*LikeResponse)(nil),        // 1: interaction.LikeResponse
+	(*CommentRequest)(nil),      // 2: interaction.CommentRequest
+	(*CommentResponse)(nil),     // 3: interaction.CommentResponse
+	(*CommentItem)(nil),         // 4: interaction.CommentItem
+	(*CommentListRequest)(nil),  // 5: interaction.CommentListRequest
+	(*CommentListResponse)(nil), // 6: interaction.CommentListResponse
 }
 var file_app_interaction_rpc_interaction_proto_depIdxs = []int32{
-	0, // 0: interaction.Interaction.Like:input_type -> interaction.LikeRequest
-	2, // 1: interaction.Interaction.Comment:input_type -> interaction.CommentRequest
-	1, // 2: interaction.Interaction.Like:output_type -> interaction.LikeResponse
-	3, // 3: interaction.Interaction.Comment:output_type -> interaction.CommentResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: interaction.CommentListResponse.list:type_name -> interaction.CommentItem
+	0, // 1: interaction.Interaction.Like:input_type -> interaction.LikeRequest
+	2, // 2: interaction.Interaction.Comment:input_type -> interaction.CommentRequest
+	5, // 3: interaction.Interaction.CommentList:input_type -> interaction.CommentListRequest
+	1, // 4: interaction.Interaction.Like:output_type -> interaction.LikeResponse
+	3, // 5: interaction.Interaction.Comment:output_type -> interaction.CommentResponse
+	6, // 6: interaction.Interaction.CommentList:output_type -> interaction.CommentListResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_app_interaction_rpc_interaction_proto_init() }
@@ -277,7 +487,7 @@ func file_app_interaction_rpc_interaction_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_interaction_rpc_interaction_proto_rawDesc), len(file_app_interaction_rpc_interaction_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

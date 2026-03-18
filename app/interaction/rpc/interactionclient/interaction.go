@@ -14,16 +14,21 @@ import (
 )
 
 type (
-	CommentRequest  = interaction.CommentRequest
-	CommentResponse = interaction.CommentResponse
-	LikeRequest     = interaction.LikeRequest
-	LikeResponse    = interaction.LikeResponse
+	CommentItem         = interaction.CommentItem
+	CommentListRequest  = interaction.CommentListRequest
+	CommentListResponse = interaction.CommentListResponse
+	CommentRequest      = interaction.CommentRequest
+	CommentResponse     = interaction.CommentResponse
+	LikeRequest         = interaction.LikeRequest
+	LikeResponse        = interaction.LikeResponse
 
 	Interaction interface {
 		// 点赞/取消点赞
 		Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
 		// 发表评论
 		Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
+		// 获取评论列表
+		CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error)
 	}
 
 	defaultInteraction struct {
@@ -47,4 +52,10 @@ func (m *defaultInteraction) Like(ctx context.Context, in *LikeRequest, opts ...
 func (m *defaultInteraction) Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.Comment(ctx, in, opts...)
+}
+
+// 获取评论列表
+func (m *defaultInteraction) CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error) {
+	client := interaction.NewInteractionClient(m.cli.Conn())
+	return client.CommentList(ctx, in, opts...)
 }

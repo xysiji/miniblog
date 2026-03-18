@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Interaction_Like_FullMethodName    = "/interaction.Interaction/Like"
-	Interaction_Comment_FullMethodName = "/interaction.Interaction/Comment"
+	Interaction_Like_FullMethodName        = "/interaction.Interaction/Like"
+	Interaction_Comment_FullMethodName     = "/interaction.Interaction/Comment"
+	Interaction_CommentList_FullMethodName = "/interaction.Interaction/CommentList"
 )
 
 // InteractionClient is the client API for Interaction service.
@@ -33,6 +34,8 @@ type InteractionClient interface {
 	Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
 	// 发表评论
 	Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
+	// 获取评论列表
+	CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error)
 }
 
 type interactionClient struct {
@@ -63,6 +66,16 @@ func (c *interactionClient) Comment(ctx context.Context, in *CommentRequest, opt
 	return out, nil
 }
 
+func (c *interactionClient) CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommentListResponse)
+	err := c.cc.Invoke(ctx, Interaction_CommentList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InteractionServer is the server API for Interaction service.
 // All implementations must embed UnimplementedInteractionServer
 // for forward compatibility.
@@ -73,6 +86,8 @@ type InteractionServer interface {
 	Like(context.Context, *LikeRequest) (*LikeResponse, error)
 	// 发表评论
 	Comment(context.Context, *CommentRequest) (*CommentResponse, error)
+	// 获取评论列表
+	CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error)
 	mustEmbedUnimplementedInteractionServer()
 }
 
@@ -88,6 +103,9 @@ func (UnimplementedInteractionServer) Like(context.Context, *LikeRequest) (*Like
 }
 func (UnimplementedInteractionServer) Comment(context.Context, *CommentRequest) (*CommentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Comment not implemented")
+}
+func (UnimplementedInteractionServer) CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CommentList not implemented")
 }
 func (UnimplementedInteractionServer) mustEmbedUnimplementedInteractionServer() {}
 func (UnimplementedInteractionServer) testEmbeddedByValue()                     {}
@@ -146,6 +164,24 @@ func _Interaction_Comment_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Interaction_CommentList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommentListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionServer).CommentList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Interaction_CommentList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionServer).CommentList(ctx, req.(*CommentListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Interaction_ServiceDesc is the grpc.ServiceDesc for Interaction service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -160,6 +196,10 @@ var Interaction_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Comment",
 			Handler:    _Interaction_Comment_Handler,
+		},
+		{
+			MethodName: "CommentList",
+			Handler:    _Interaction_CommentList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

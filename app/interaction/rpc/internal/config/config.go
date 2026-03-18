@@ -8,7 +8,10 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	DataSource string          // MySQL 链接
-	CacheRedis cache.CacheConf // go-zero 内置行缓存
-	BizRedis   redis.RedisConf // 业务 Redis
+	DataSource string
+	CacheRedis cache.CacheConf
+	BizRedis   redis.RedisConf
+
+	// 【新增】：通知服务的 RPC 客户端配置
+	NoticeRpc zrpc.RpcClientConf
 }

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package notice;
+option go_package = "./notice";
+
+// 互动服务传过来的生成通知请求
+message CreateNoticeReq {
+  int64 user_id = 1;  // 接收方ID
+  int64 actor_id = 2; // 操作方ID
+  int64 post_id = 3;  // 目标博文ID
+  int32 type = 4;     // 类型(1点赞 2评论)
+}
+
+message CreateNoticeResp {}
+
+service NoticeRpc {
+  // 内部接口：供 Interaction 服务异步调用来生成通知
+  rpc CreateNotice(CreateNoticeReq) returns (CreateNoticeResp);
+}

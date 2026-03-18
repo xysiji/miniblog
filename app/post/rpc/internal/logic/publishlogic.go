@@ -3,7 +3,7 @@ package logic
 import (
 	"context"
 	"fmt"
-	"time" // 新增：为了获取当前时间戳作为 Redis ZSet 的分数
+	"time"
 
 	"miniblog/app/post/model"
 	"miniblog/app/post/rpc/internal/svc"
@@ -27,41 +27,40 @@ func NewPublishLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PublishLo
 	}
 }
 
+// Publish 发布微型博客
 func (l *PublishLogic) Publish(in *post.PublishRequest) (*post.PublishResponse, error) {
-	// 1. 生成雪花算法全局唯一博文 ID (为后续分库分表做准备)
-	node, err := snowflake.NewNode(2) // 节点ID设为2，区分于用户服务
+	// 1. 生成雪花算法全局唯一博文 ID (为后续分库分表做准备，节点ID为2)
+	node, err := snowflake.NewNode(2)
 	if err != nil {
-		return nil, fmt.Errorf("生成博文ID失败: %v", err)
+		return nil, fmt.Errorf("生成分布式ID失败: %v", err)
 	}
 	postId := node.Generate().Int64()
 
-	// 2. 组装数据并写入 MySQL
+	// 2. 组装待插入的数据库模型数据
+
 	newPost := &model.Post{
-		Id:      postId,
-		UserId:  in.UserId,
-		Content: in.Content,
+		Id:         postId,
+		UserId:     in.UserId,
+		Content:    in.Content,
+		CreateTime: time.Now(), // ✅ 修正为 CreateTime
+	}
+	// 3. 【分布式架构核心】：写操作强制路由到 Master 主库 (PostMasterModel)
+	_, err = l.svcCtx.PostMasterModel.Insert(l.ctx, newPost)
+	if err != nil {
+		l.Logger.Errorf("写入主库失败: %v", err)
+		return nil, fmt.Errorf("发布失败，请稍后重试")
 	}
 
-	_, err = l.svcCtx.PostModel.InsertWithId(l.ctx, newPost)
+	// 4. 将新发布的博文推送到全局 Timeline (Redis ZSet，Score 为时间戳)
+	timelineKey := "biz:post:timeline:global"
+	score := time.Now().Unix()
+	_, err = l.svcCtx.BizRedis.ZaddCtx(l.ctx, timelineKey, score, fmt.Sprintf("%d", postId))
 	if err != nil {
-		return nil, fmt.Errorf("博文插入数据库失败: %v", err)
-	}
-
-	// ==========================================
-	// 本次新增核心逻辑：3. 同步写入 Redis Timeline
-	// ==========================================
-	// 使用 Redis 的 ZSet (有序集合)，按时间戳排序
-	timelineKey := "biz:post:global_timeline"
-	// 将博文 ID 转为字符串存入 Redis，分数为当前 Unix 时间戳
-	_, err = l.svcCtx.BizRedis.ZaddCtx(l.ctx, timelineKey, time.Now().Unix(), fmt.Sprintf("%d", postId))
-	if err != nil {
-		// 缓存降级：就算 Redis 挂了，博文已经发到 MySQL 了，不能阻断用户，所以只打 Error 日志不 return err
-		l.Logger.Errorf("【缓存警告】博文 %d 写入 Redis Timeline 失败: %v", postId, err)
+		l.Logger.Errorf("同步到 Timeline 缓存失败: %v", err)
 	} else {
-		l.Logger.Infof("博文 %d 已成功推送到全局 Timeline", postId)
+		l.Logger.Infof("博文 %d 已成功推送到全局 Timeline, 路由: Master", postId)
 	}
 
-	// 4. 返回生成的 PostId
 	return &post.PublishResponse{
 		PostId: postId,
 	}, nil
