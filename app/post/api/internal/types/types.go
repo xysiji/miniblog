@@ -14,8 +14,8 @@ type ListResp struct {
 }
 
 type PostItem struct {
-	Id       int64  `json:"id"`
-	UserId   int64  `json:"userId"`
+	Id       int64  `json:"id,string"`     // 【加 ,string】
+	UserId   int64  `json:"userId,string"` // 【加 ,string】
 	Content  string `json:"content"`
 	CreateAt string `json:"createAt"` // 返回友好的时间格式
 }
@@ -25,5 +25,5 @@ type PublishReq struct {
 }
 
 type PublishResp struct {
-	PostId int64 `json:"postId"`
+	PostId int64 `json:"post_id,string"` // 【加 ,string】
 }

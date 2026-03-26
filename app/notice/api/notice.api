@@ -19,6 +19,21 @@ type (
 	}
 )
 
+type (
+	ReadAllReq  {}
+	ReadAllResp  {}
+)
+
+// ==========================
+// 新增：单条已读的请求体与响应体
+// ==========================
+type (
+	ReadReq {
+		NoticeId int64 `json:"notice_id"` // 前端传来的目标通知ID
+	}
+	ReadResp  {}
+)
+
 @server (
 	prefix: /v1/notice
 	jwt:    Auth
@@ -27,5 +42,13 @@ service notice-api {
 	@doc "获取我的通知列表"
 	@handler ListHandler
 	post /list (NoticeListReq) returns (NoticeListResp)
+
+	@doc "一键已读"
+	@handler ReadAllHandler
+	post /readall (ReadAllReq) returns (ReadAllResp)
+
+	@doc "单条通知置为已读"
+	@handler ReadHandler
+	post /read (ReadReq) returns (ReadResp)
 }
 

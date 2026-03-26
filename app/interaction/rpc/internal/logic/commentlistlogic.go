@@ -23,30 +23,34 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 	}
 }
 
-// 获取评论列表
+// CommentList 获取评论列表
 func (l *CommentListLogic) CommentList(in *interaction.CommentListRequest) (*interaction.CommentListResponse, error) {
-	// 1. 查询该博文下的评论总数
-	total, err := l.svcCtx.CommentModel.CountByPostId(l.ctx, in.PostId)
-	if err != nil || total == 0 {
-		return &interaction.CommentListResponse{}, nil
-	}
-
-	// 2. 分页查询评论列表数据
-	dbList, err := l.svcCtx.CommentModel.FindPageListByPostId(l.ctx, in.PostId, in.Page, in.PageSize)
+	// 【核心修复】：调用带有 Shard 后缀的分表查询方法 (走从库读取)
+	total, err := l.svcCtx.CommentModel.CountByPostIdShard(l.ctx, in.PostId)
 	if err != nil {
+		l.Logger.Errorf("查询评论总数失败: %v", err)
 		return nil, err
 	}
 
-	// 3. 将数据库模型映射为 RPC Protobuf 返回模型
 	var list []*interaction.CommentItem
-	for _, item := range dbList {
-		list = append(list, &interaction.CommentItem{
-			Id:         item.Id,
-			PostId:     item.PostId,
-			UserId:     item.UserId,
-			Content:    item.Content,
-			CreateTime: item.CreateTime.Unix(), // 转换为时间戳传给前端网关
-		})
+	if total > 0 {
+		// 【核心修复】：调用带有 Shard 后缀的分表查询方法 (走从库读取)
+		comments, err := l.svcCtx.CommentModel.FindPageListByPostIdShard(l.ctx, in.PostId, int(in.Page), int(in.PageSize))
+		if err != nil {
+			l.Logger.Errorf("查询评论列表失败: %v", err)
+			return nil, err
+		}
+
+		for _, c := range comments {
+			list = append(list, &interaction.CommentItem{
+				Id:      c.Id,
+				PostId:  c.PostId,
+				UserId:  c.UserId,
+				Content: c.Content,
+				// 注意：如果你的 c.CreateTime 是 time.Time 类型，请保留 .Unix()。如果是 int64，直接赋值即可。
+				CreateTime: c.CreateTime.Unix(),
+			})
+		}
 	}
 
 	return &interaction.CommentListResponse{

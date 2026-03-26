@@ -20,6 +20,10 @@ type (
 		FindListByUserId(ctx context.Context, userId int64, page, pageSize int) ([]*Notice, error)
 		// 【新增】：查询某个用户的通知总数 (用于前端分页组件)
 		CountByUserId(ctx context.Context, userId int64) (int64, error)
+		// 【新增】：一键将用户的所有未读通知置为已读
+		ReadAllByUserId(ctx context.Context, userId int64) error
+		// 【新增】：单条已读
+		ReadById(ctx context.Context, id int64) error
 	}
 
 	customNoticeModel struct {
@@ -28,31 +32,40 @@ type (
 )
 
 // NewNoticeModel returns a model for the database table.
-// 【⚠️精确修复】：保留你原版代码中的 opts ...cache.Option，防止编译报错
 func NewNoticeModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) NoticeModel {
 	return &customNoticeModel{
 		defaultNoticeModel: newNoticeModel(conn, c, opts...),
 	}
 }
 
-// 【新增】：实现查询列表的具体 SQL
+// 实现查询列表的具体 SQL
 func (m *customNoticeModel) FindListByUserId(ctx context.Context, userId int64, page, pageSize int) ([]*Notice, error) {
-	// noticeRows 变量在 _gen.go 中已自动生成，包含了所有字段名
-	// 按 create_time 降序排列，最新的通知在最前面
 	query := fmt.Sprintf("select %s from %s where `user_id` = ? order by create_time desc limit ?, ?", noticeRows, m.table)
-
 	var resp []*Notice
-	// 计算分页 offset
 	offset := (page - 1) * pageSize
-
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, userId, offset, pageSize)
 	return resp, err
 }
 
-// 【新增】：实现查询总数的具体 SQL
+// 实现查询总数的具体 SQL
 func (m *customNoticeModel) CountByUserId(ctx context.Context, userId int64) (int64, error) {
 	query := fmt.Sprintf("select count(*) from %s where `user_id` = ?", m.table)
 	var count int64
 	err := m.QueryRowNoCacheCtx(ctx, &count, query, userId)
 	return count, err
+}
+
+// 实现一键已读的具体 SQL
+func (m *customNoticeModel) ReadAllByUserId(ctx context.Context, userId int64) error {
+	// is_read = 0 表示未读，将其更新为 1 已读
+	query := fmt.Sprintf("update %s set `is_read` = 1 where `user_id` = ? and `is_read` = 0", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, userId)
+	return err
+}
+
+// 实现单条已读的具体 SQL
+func (m *customNoticeModel) ReadById(ctx context.Context, id int64) error {
+	query := fmt.Sprintf("update %s set `is_read` = 1 where `id` = ?", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, id)
+	return err
 }

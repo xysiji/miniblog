@@ -20,6 +20,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/list",
 				Handler: ListHandler(serverCtx),
 			},
+			{
+				// 单条通知置为已读
+				Method:  http.MethodPost,
+				Path:    "/read",
+				Handler: ReadHandler(serverCtx),
+			},
+			{
+				// 一键已读
+				Method:  http.MethodPost,
+				Path:    "/readall",
+				Handler: ReadAllHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/v1/notice"),

@@ -7,16 +7,13 @@ type (
 	LikeResp  {}
 )
 
-// ==========================
-// 新增：评论相关的结构体
-// ==========================
 type (
 	CommentReq {
 		PostId  int64  `json:"post_id"`
 		Content string `json:"content"`
 	}
 	CommentResp {
-		CommentId int64 `json:"comment_id"` //
+		CommentId int64 `json:"comment_id"` // 雪花算法生成的ID
 	}
 	CommentItem {
 		Id         int64  `json:"id"`
@@ -33,6 +30,16 @@ type (
 	CommentListResp {
 		List  []CommentItem `json:"list"`
 		Total int64         `json:"total"`
+	}
+)
+
+// ==========================
+// 新增：点赞列表查询的结构体
+// ==========================
+type (
+	LikedListReq  {}
+	LikedListResp {
+		PostIds []int64 `json:"post_ids"` // 当前用户点赞过的所有博文ID
 	}
 )
 
@@ -63,5 +70,9 @@ service interaction-api {
 	@doc "发表评论"
 	@handler Comment
 	post /comment (CommentReq) returns (CommentResp)
+
+	@doc "获取当前用户点赞过的博文ID列表"
+	@handler LikedList
+	post /like/list (LikedListReq) returns (LikedListResp)
 }
 

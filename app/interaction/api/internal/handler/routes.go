@@ -38,6 +38,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/like",
 				Handler: LikeHandler(serverCtx),
 			},
+			{
+				// 获取当前用户点赞过的博文ID列表
+				Method:  http.MethodPost,
+				Path:    "/like/list",
+				Handler: LikedListHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/v1/interaction"),

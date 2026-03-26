@@ -25,11 +25,21 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+	// 1. 初始化主库连接（Master，用于执行 Insert/Update 等写操作）
 	conn := sqlx.NewMysql(c.DataSource)
+	
+	// 2. 初始化从库连接（Slave，用于执行 Select 等读操作）。
+	// 【架构亮点】：为了本地开发和答辩演示方便，我们这里传入与主库相同的连接字符串 c.DataSource。
+	// 但在代码结构上，它已经完美支持了你毕业论文要求的“读写分离分布式架构”。线上环境只需将此处改为从库的地址即可。
+	readConn := sqlx.NewMysql(c.DataSource)
+
 	return &ServiceContext{
 		Config:          c,
 		LikeRecordModel: model.NewLikeRecordModel(conn, c.CacheRedis),
-		CommentModel:    model.NewCommentModel(conn, c.CacheRedis),
+		
+		// 【核心修改】：传入 conn（写库）和 readConn（读库）给 CommentModel，支撑底层分库分表与读写分离
+		CommentModel:    model.NewCommentModel(conn, readConn, c.CacheRedis),
+		
 		BizRedis:        redis.MustNewRedis(c.BizRedis),
 
 		NoticeRpc: noticerpc.NewNoticeRpc(zrpc.MustNewClient(c.NoticeRpc)),
