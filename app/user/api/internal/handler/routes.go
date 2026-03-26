@@ -27,4 +27,23 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithPrefix("/v1/user"),
 	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 获取当前用户信息
+				Method:  http.MethodPost,
+				Path:    "/info",
+				Handler: UserInfoHandler(serverCtx),
+			},
+			{
+				// 修改用户信息
+				Method:  http.MethodPost,
+				Path:    "/update",
+				Handler: UserUpdateHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/v1/user"),
+	)
 }

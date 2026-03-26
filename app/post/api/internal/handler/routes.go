@@ -15,6 +15,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 获取单条博文详情
+				Method:  http.MethodPost,
+				Path:    "/detail",
+				Handler: DetailHandler(serverCtx),
+			},
+			{
 				// 获取微型博客列表
 				Method:  http.MethodPost,
 				Path:    "/list",
@@ -26,6 +32,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 
 	server.AddRoutes(
 		[]rest.Route{
+			{
+				// 删除微型博客
+				Method:  http.MethodPost,
+				Path:    "/delete",
+				Handler: DeleteHandler(serverCtx),
+			},
 			{
 				// 发布微型博客
 				Method:  http.MethodPost,

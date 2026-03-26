@@ -3,6 +3,21 @@
 
 package types
 
+type DeleteReq struct {
+	PostId int64 `json:"post_id"`
+}
+
+type DeleteResp struct {
+}
+
+type DetailReq struct {
+	PostId int64 `json:"post_id"`
+}
+
+type DetailResp struct {
+	Post PostItem `json:"post"`
+}
+
 type ListReq struct {
 	Page     int64 `json:"page"`     // 第几页
 	PageSize int64 `json:"pageSize"` // 每页多少条
@@ -14,16 +29,18 @@ type ListResp struct {
 }
 
 type PostItem struct {
-	Id       int64  `json:"id,string"`     // 【加 ,string】
-	UserId   int64  `json:"userId,string"` // 【加 ,string】
-	Content  string `json:"content"`
-	CreateAt string `json:"createAt"` // 返回友好的时间格式
+	Id       int64    `json:"id"`
+	UserId   int64    `json:"userId"`
+	Content  string   `json:"content"`
+	Images   []string `json:"images"`   // 新增：博文图片
+	CreateAt string   `json:"createAt"` // 返回友好的时间格式
 }
 
 type PublishReq struct {
-	Content string `json:"content"`
+	Content string   `json:"content"`
+	Images  []string `json:"images,optional"` // 新增：支持多张图片链接
 }
 
 type PublishResp struct {
-	PostId int64 `json:"post_id,string"` // 【加 ,string】
+	PostId int64 `json:"postId"`
 }

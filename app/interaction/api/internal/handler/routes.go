@@ -33,6 +33,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: CommentHandler(serverCtx),
 			},
 			{
+				// 删除评论
+				Method:  http.MethodPost,
+				Path:    "/comment/delete",
+				Handler: CommentDeleteHandler(serverCtx),
+			},
+			{
 				// 点赞
 				Method:  http.MethodPost,
 				Path:    "/like",
@@ -43,6 +49,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodPost,
 				Path:    "/like/list",
 				Handler: LikedListHandler(serverCtx),
+			},
+			{
+				// 取消点赞
+				Method:  http.MethodPost,
+				Path:    "/unlike",
+				Handler: UnlikeHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),

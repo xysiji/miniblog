@@ -21,11 +21,12 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// --- 原有的发布相关结构 ---
+// --- 修改：发布相关结构 ---
 type PublishRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	Images        string                 `protobuf:"bytes,3,opt,name=images,proto3" json:"images,omitempty"` // 新增：接收序列化后的图片 JSON 字符串
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -74,6 +75,13 @@ func (x *PublishRequest) GetContent() string {
 	return ""
 }
 
+func (x *PublishRequest) GetImages() string {
+	if x != nil {
+		return x.Images
+	}
+	return ""
+}
+
 type PublishResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PostId        int64                  `protobuf:"varint,1,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
@@ -118,7 +126,7 @@ func (x *PublishResponse) GetPostId() int64 {
 	return 0
 }
 
-// --- 新增：获取列表相关结构 ---
+// --- 修改：获取列表相关结构 ---
 type ListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int64                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`                         // 第几页
@@ -177,6 +185,7 @@ type PostItem struct {
 	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	CreateTime    int64                  `protobuf:"varint,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` // 底层使用时间戳传递
+	Images        string                 `protobuf:"bytes,5,opt,name=images,proto3" json:"images,omitempty"`                            // 新增：博文图片 JSON 字符串
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -239,6 +248,13 @@ func (x *PostItem) GetCreateTime() int64 {
 	return 0
 }
 
+func (x *PostItem) GetImages() string {
+	if x != nil {
+		return x.Images
+	}
+	return ""
+}
+
 type ListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	List          []*PostItem            `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"` // repeated 相当于 Go 里的切片 (Slice)
@@ -291,32 +307,222 @@ func (x *ListResponse) GetTotal() int64 {
 	return 0
 }
 
+// --- 新增：详情相关结构 ---
+type DetailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PostId        int64                  `protobuf:"varint,1,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DetailRequest) Reset() {
+	*x = DetailRequest{}
+	mi := &file_post_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DetailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DetailRequest) ProtoMessage() {}
+
+func (x *DetailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_post_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DetailRequest.ProtoReflect.Descriptor instead.
+func (*DetailRequest) Descriptor() ([]byte, []int) {
+	return file_post_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DetailRequest) GetPostId() int64 {
+	if x != nil {
+		return x.PostId
+	}
+	return 0
+}
+
+type DetailResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Post          *PostItem              `protobuf:"bytes,1,opt,name=post,proto3" json:"post,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DetailResponse) Reset() {
+	*x = DetailResponse{}
+	mi := &file_post_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DetailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DetailResponse) ProtoMessage() {}
+
+func (x *DetailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_post_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DetailResponse.ProtoReflect.Descriptor instead.
+func (*DetailResponse) Descriptor() ([]byte, []int) {
+	return file_post_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DetailResponse) GetPost() *PostItem {
+	if x != nil {
+		return x.Post
+	}
+	return nil
+}
+
+// --- 新增：删除相关结构 ---
+type DeleteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PostId        int64                  `protobuf:"varint,1,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 传入 user_id 用于在底层鉴权，确保只能删除自己的博文
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteRequest) Reset() {
+	*x = DeleteRequest{}
+	mi := &file_post_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteRequest) ProtoMessage() {}
+
+func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_post_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
+func (*DeleteRequest) Descriptor() ([]byte, []int) {
+	return file_post_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DeleteRequest) GetPostId() int64 {
+	if x != nil {
+		return x.PostId
+	}
+	return 0
+}
+
+func (x *DeleteRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+type DeleteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteResponse) Reset() {
+	*x = DeleteResponse{}
+	mi := &file_post_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteResponse) ProtoMessage() {}
+
+func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_post_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
+func (*DeleteResponse) Descriptor() ([]byte, []int) {
+	return file_post_proto_rawDescGZIP(), []int{8}
+}
+
 var File_post_proto protoreflect.FileDescriptor
 
 const file_post_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"post.proto\x12\x04post\"C\n" +
+	"post.proto\x12\x04post\"[\n" +
 	"\x0ePublishRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"*\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\x12\x16\n" +
+	"\x06images\x18\x03 \x01(\tR\x06images\"*\n" +
 	"\x0fPublishResponse\x12\x17\n" +
 	"\apost_id\x18\x01 \x01(\x03R\x06postId\">\n" +
 	"\vListRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x03R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\"n\n" +
+	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\"\x86\x01\n" +
 	"\bPostItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1f\n" +
 	"\vcreate_time\x18\x04 \x01(\x03R\n" +
-	"createTime\"H\n" +
+	"createTime\x12\x16\n" +
+	"\x06images\x18\x05 \x01(\tR\x06images\"H\n" +
 	"\fListResponse\x12\"\n" +
 	"\x04list\x18\x01 \x03(\v2\x0e.post.PostItemR\x04list\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total2m\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"(\n" +
+	"\rDetailRequest\x12\x17\n" +
+	"\apost_id\x18\x01 \x01(\x03R\x06postId\"4\n" +
+	"\x0eDetailResponse\x12\"\n" +
+	"\x04post\x18\x01 \x01(\v2\x0e.post.PostItemR\x04post\"A\n" +
+	"\rDeleteRequest\x12\x17\n" +
+	"\apost_id\x18\x01 \x01(\x03R\x06postId\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\"\x10\n" +
+	"\x0eDeleteResponse2\xd7\x01\n" +
 	"\x04Post\x126\n" +
 	"\aPublish\x12\x14.post.PublishRequest\x1a\x15.post.PublishResponse\x12-\n" +
-	"\x04List\x12\x11.post.ListRequest\x1a\x12.post.ListResponseB\bZ\x06./postb\x06proto3"
+	"\x04List\x12\x11.post.ListRequest\x1a\x12.post.ListResponse\x123\n" +
+	"\x06Detail\x12\x13.post.DetailRequest\x1a\x14.post.DetailResponse\x123\n" +
+	"\x06Delete\x12\x13.post.DeleteRequest\x1a\x14.post.DeleteResponseB\bZ\x06./postb\x06proto3"
 
 var (
 	file_post_proto_rawDescOnce sync.Once
@@ -330,25 +536,34 @@ func file_post_proto_rawDescGZIP() []byte {
 	return file_post_proto_rawDescData
 }
 
-var file_post_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_post_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_post_proto_goTypes = []any{
 	(*PublishRequest)(nil),  // 0: post.PublishRequest
 	(*PublishResponse)(nil), // 1: post.PublishResponse
 	(*ListRequest)(nil),     // 2: post.ListRequest
 	(*PostItem)(nil),        // 3: post.PostItem
 	(*ListResponse)(nil),    // 4: post.ListResponse
+	(*DetailRequest)(nil),   // 5: post.DetailRequest
+	(*DetailResponse)(nil),  // 6: post.DetailResponse
+	(*DeleteRequest)(nil),   // 7: post.DeleteRequest
+	(*DeleteResponse)(nil),  // 8: post.DeleteResponse
 }
 var file_post_proto_depIdxs = []int32{
 	3, // 0: post.ListResponse.list:type_name -> post.PostItem
-	0, // 1: post.Post.Publish:input_type -> post.PublishRequest
-	2, // 2: post.Post.List:input_type -> post.ListRequest
-	1, // 3: post.Post.Publish:output_type -> post.PublishResponse
-	4, // 4: post.Post.List:output_type -> post.ListResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 1: post.DetailResponse.post:type_name -> post.PostItem
+	0, // 2: post.Post.Publish:input_type -> post.PublishRequest
+	2, // 3: post.Post.List:input_type -> post.ListRequest
+	5, // 4: post.Post.Detail:input_type -> post.DetailRequest
+	7, // 5: post.Post.Delete:input_type -> post.DeleteRequest
+	1, // 6: post.Post.Publish:output_type -> post.PublishResponse
+	4, // 7: post.Post.List:output_type -> post.ListResponse
+	6, // 8: post.Post.Detail:output_type -> post.DetailResponse
+	8, // 9: post.Post.Delete:output_type -> post.DeleteResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_post_proto_init() }
@@ -362,7 +577,7 @@ func file_post_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_post_proto_rawDesc), len(file_post_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

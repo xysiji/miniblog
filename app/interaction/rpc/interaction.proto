@@ -10,6 +10,13 @@ message LikeRequest {
 }
 message LikeResponse {}
 
+// 新增：取消点赞相关
+message UnlikeRequest {
+  int64 user_id = 1;
+  int64 post_id = 2;
+}
+message UnlikeResponse {}
+
 // --- 评论相关 ---
 message CommentRequest {
   int64 user_id = 1;
@@ -19,6 +26,13 @@ message CommentRequest {
 message CommentResponse {
   int64 comment_id = 1; // 返回生成的评论ID
 }
+
+// 新增：删除评论相关
+message CommentDeleteRequest {
+  int64 user_id = 1;
+  int64 comment_id = 2;
+}
+message CommentDeleteResponse {}
 
 // --- 新增：评论列表相关 ---
 message CommentItem {
@@ -41,10 +55,18 @@ message CommentListResponse {
 
 // 互动服务
 service Interaction {
-  // 点赞/取消点赞
+  // 点赞
   rpc Like(LikeRequest) returns(LikeResponse);
+  
+  // 新增：取消点赞
+  rpc Unlike(UnlikeRequest) returns(UnlikeResponse);
+  
   // 发表评论
   rpc Comment(CommentRequest) returns(CommentResponse);
+  
+  // 新增：删除评论
+  rpc CommentDelete(CommentDeleteRequest) returns(CommentDeleteResponse);
+  
   // 获取评论列表
   rpc CommentList(CommentListRequest) returns(CommentListResponse);
 }

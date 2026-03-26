@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Post_Publish_FullMethodName = "/post.Post/Publish"
 	Post_List_FullMethodName    = "/post.Post/List"
+	Post_Detail_FullMethodName  = "/post.Post/Detail"
+	Post_Delete_FullMethodName  = "/post.Post/Delete"
 )
 
 // PostClient is the client API for Post service.
@@ -30,8 +32,11 @@ const (
 // 内部博文业务服务
 type PostClient interface {
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
-	// 新增：内部获取列表的 RPC 方法
+	// 内部获取列表的 RPC 方法
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+	// 新增：详情和删除 RPC 方法
+	Detail(ctx context.Context, in *DetailRequest, opts ...grpc.CallOption) (*DetailResponse, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
 type postClient struct {
@@ -62,6 +67,26 @@ func (c *postClient) List(ctx context.Context, in *ListRequest, opts ...grpc.Cal
 	return out, nil
 }
 
+func (c *postClient) Detail(ctx context.Context, in *DetailRequest, opts ...grpc.CallOption) (*DetailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DetailResponse)
+	err := c.cc.Invoke(ctx, Post_Detail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteResponse)
+	err := c.cc.Invoke(ctx, Post_Delete_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PostServer is the server API for Post service.
 // All implementations must embed UnimplementedPostServer
 // for forward compatibility.
@@ -69,8 +94,11 @@ func (c *postClient) List(ctx context.Context, in *ListRequest, opts ...grpc.Cal
 // 内部博文业务服务
 type PostServer interface {
 	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
-	// 新增：内部获取列表的 RPC 方法
+	// 内部获取列表的 RPC 方法
 	List(context.Context, *ListRequest) (*ListResponse, error)
+	// 新增：详情和删除 RPC 方法
+	Detail(context.Context, *DetailRequest) (*DetailResponse, error)
+	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 	mustEmbedUnimplementedPostServer()
 }
 
@@ -86,6 +114,12 @@ func (UnimplementedPostServer) Publish(context.Context, *PublishRequest) (*Publi
 }
 func (UnimplementedPostServer) List(context.Context, *ListRequest) (*ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedPostServer) Detail(context.Context, *DetailRequest) (*DetailResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Detail not implemented")
+}
+func (UnimplementedPostServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedPostServer) mustEmbedUnimplementedPostServer() {}
 func (UnimplementedPostServer) testEmbeddedByValue()              {}
@@ -144,6 +178,42 @@ func _Post_List_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Post_Detail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DetailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServer).Detail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Post_Detail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServer).Detail(ctx, req.(*DetailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Post_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Post_Delete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServer).Delete(ctx, req.(*DeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Post_ServiceDesc is the grpc.ServiceDesc for Post service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -158,6 +228,14 @@ var Post_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "List",
 			Handler:    _Post_List_Handler,
+		},
+		{
+			MethodName: "Detail",
+			Handler:    _Post_Detail_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _Post_Delete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

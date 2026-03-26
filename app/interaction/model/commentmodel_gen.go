@@ -45,6 +45,7 @@ type (
 		PostId     int64     `db:"post_id"` // 博文ID
 		UserId     int64     `db:"user_id"` // 评论用户ID
 		Content    string    `db:"content"` // 评论内容
+		Status     int64     `db:"status"`  // 状态：1-正常，0-已删除
 		CreateTime time.Time `db:"create_time"`
 	}
 )
@@ -85,8 +86,8 @@ func (m *defaultCommentModel) FindOne(ctx context.Context, id int64) (*Comment, 
 func (m *defaultCommentModel) Insert(ctx context.Context, data *Comment) (sql.Result, error) {
 	commentIdKey := fmt.Sprintf("%s%v", cacheCommentIdPrefix, data.Id)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Id, data.PostId, data.UserId, data.Content)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, commentRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.Id, data.PostId, data.UserId, data.Content, data.Status)
 	}, commentIdKey)
 	return ret, err
 }
@@ -95,7 +96,7 @@ func (m *defaultCommentModel) Update(ctx context.Context, data *Comment) error {
 	commentIdKey := fmt.Sprintf("%s%v", cacheCommentIdPrefix, data.Id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, commentRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.PostId, data.UserId, data.Content, data.Id)
+		return conn.ExecCtx(ctx, query, data.PostId, data.UserId, data.Content, data.Status, data.Id)
 	}, commentIdKey)
 	return err
 }

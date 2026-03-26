@@ -14,6 +14,10 @@ import (
 )
 
 type (
+	DeleteRequest   = post.DeleteRequest
+	DeleteResponse  = post.DeleteResponse
+	DetailRequest   = post.DetailRequest
+	DetailResponse  = post.DetailResponse
 	ListRequest     = post.ListRequest
 	ListResponse    = post.ListResponse
 	PostItem        = post.PostItem
@@ -22,8 +26,11 @@ type (
 
 	Post interface {
 		Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
-		// 新增：内部获取列表的 RPC 方法
+		// 内部获取列表的 RPC 方法
 		List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
+		// 新增：详情和删除 RPC 方法
+		Detail(ctx context.Context, in *DetailRequest, opts ...grpc.CallOption) (*DetailResponse, error)
+		Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	}
 
 	defaultPost struct {
@@ -42,8 +49,19 @@ func (m *defaultPost) Publish(ctx context.Context, in *PublishRequest, opts ...g
 	return client.Publish(ctx, in, opts...)
 }
 
-// 新增：内部获取列表的 RPC 方法
+// 内部获取列表的 RPC 方法
 func (m *defaultPost) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	client := post.NewPostClient(m.cli.Conn())
 	return client.List(ctx, in, opts...)
+}
+
+// 新增：详情和删除 RPC 方法
+func (m *defaultPost) Detail(ctx context.Context, in *DetailRequest, opts ...grpc.CallOption) (*DetailResponse, error) {
+	client := post.NewPostClient(m.cli.Conn())
+	return client.Detail(ctx, in, opts...)
+}
+
+func (m *defaultPost) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	client := post.NewPostClient(m.cli.Conn())
+	return client.Delete(ctx, in, opts...)
 }

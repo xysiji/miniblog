@@ -3,17 +3,18 @@ syntax = "proto3";
 package post;
 option go_package = "./post";
 
-// --- 原有的发布相关结构 ---
+// --- 修改：发布相关结构 ---
 message PublishRequest {
   int64 user_id = 1;
   string content = 2;
+  string images = 3; // 新增：接收序列化后的图片 JSON 字符串
 }
 
 message PublishResponse {
   int64 post_id = 1;
 }
 
-// --- 新增：获取列表相关结构 ---
+// --- 修改：获取列表相关结构 ---
 message ListRequest {
   int64 page = 1;      // 第几页
   int64 page_size = 2; // 每页大小
@@ -24,6 +25,7 @@ message PostItem {
   int64 user_id = 2;
   string content = 3;
   int64 create_time = 4; // 底层使用时间戳传递
+  string images = 5;     // 新增：博文图片 JSON 字符串
 }
 
 message ListResponse {
@@ -31,10 +33,32 @@ message ListResponse {
   int64 total = 2;
 }
 
+// --- 新增：详情相关结构 ---
+message DetailRequest {
+  int64 post_id = 1;
+}
+
+message DetailResponse {
+  PostItem post = 1;
+}
+
+// --- 新增：删除相关结构 ---
+message DeleteRequest {
+  int64 post_id = 1;
+  int64 user_id = 2; // 传入 user_id 用于在底层鉴权，确保只能删除自己的博文
+}
+
+message DeleteResponse {
+}
+
 // 内部博文业务服务
 service Post {
   rpc Publish(PublishRequest) returns(PublishResponse);
   
-  // 新增：内部获取列表的 RPC 方法
+  // 内部获取列表的 RPC 方法
   rpc List(ListRequest) returns(ListResponse);
+
+  // 新增：详情和删除 RPC 方法
+  rpc Detail(DetailRequest) returns(DetailResponse);
+  rpc Delete(DeleteRequest) returns(DeleteResponse);
 }

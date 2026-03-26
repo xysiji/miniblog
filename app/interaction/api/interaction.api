@@ -5,6 +5,11 @@ type (
 		PostId int64 `json:"post_id"`
 	}
 	LikeResp  {}
+	// 新增：取消点赞
+	UnlikeReq {
+		PostId int64 `json:"post_id"`
+	}
+	UnlikeResp  {}
 )
 
 type (
@@ -31,6 +36,11 @@ type (
 		List  []CommentItem `json:"list"`
 		Total int64         `json:"total"`
 	}
+	// 新增：删除评论
+	CommentDeleteReq {
+		CommentId int64 `json:"comment_id"`
+	}
+	CommentDeleteResp  {}
 )
 
 // ==========================
@@ -67,9 +77,17 @@ service interaction-api {
 	@handler Like
 	post /like (LikeReq) returns (LikeResp)
 
+	@doc "取消点赞"
+	@handler Unlike
+	post /unlike (UnlikeReq) returns (UnlikeResp)
+
 	@doc "发表评论"
 	@handler Comment
 	post /comment (CommentReq) returns (CommentResp)
+
+	@doc "删除评论"
+	@handler CommentDelete
+	post /comment/delete (CommentDeleteReq) returns (CommentDeleteResp)
 
 	@doc "获取当前用户点赞过的博文ID列表"
 	@handler LikedList

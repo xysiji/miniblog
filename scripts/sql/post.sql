@@ -2,6 +2,7 @@ CREATE TABLE `post` (
   `id` bigint NOT NULL COMMENT '全局唯一博文ID',
   `user_id` bigint NOT NULL COMMENT '作者ID (未来的分库分表 Sharding Key)',
   `content` text NOT NULL COMMENT '博文内容',
+  `images` json NULL COMMENT '博文图片URL数组', -- ✅ 新增这一行
   `like_count` int NOT NULL DEFAULT '0' COMMENT '点赞数',
   `comment_count` int NOT NULL DEFAULT '0' COMMENT '评论数',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',

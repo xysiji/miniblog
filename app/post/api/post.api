@@ -3,7 +3,8 @@ syntax = "v1"
 // 发布相关的结构体
 type (
 	PublishReq {
-		Content string `json:"content"`
+		Content string   `json:"content"`
+		Images  []string `json:"images,optional"` // 新增：支持多张图片链接
 	}
 	PublishResp {
 		PostId int64 `json:"postId"`
@@ -13,10 +14,11 @@ type (
 // 新增：列表相关的结构体 (支持分页)
 type (
 	PostItem {
-		Id       int64  `json:"id"`
-		UserId   int64  `json:"userId"`
-		Content  string `json:"content"`
-		CreateAt string `json:"createAt"` // 返回友好的时间格式
+		Id       int64    `json:"id"`
+		UserId   int64    `json:"userId"`
+		Content  string   `json:"content"`
+		Images   []string `json:"images"` // 新增：博文图片
+		CreateAt string   `json:"createAt"` // 返回友好的时间格式
 	}
 	ListReq {
 		Page     int64 `json:"page"` // 第几页
@@ -26,6 +28,20 @@ type (
 		List  []PostItem `json:"list"` // 博文数组
 		Total int64      `json:"total"` // 总条数
 	}
+)
+
+// 新增：博文详情与删除
+type (
+	DetailReq {
+		PostId int64 `json:"post_id"`
+	}
+	DetailResp {
+		Post PostItem `json:"post"`
+	}
+	DeleteReq {
+		PostId int64 `json:"post_id"`
+	}
+	DeleteResp  {}
 )
 
 // ==========================
@@ -39,6 +55,10 @@ service post-api {
 	@doc "获取微型博客列表"
 	@handler ListHandler
 	post /list (ListReq) returns (ListResp)
+
+	@doc "获取单条博文详情"
+	@handler DetailHandler
+	post /detail (DetailReq) returns (DetailResp)
 }
 
 // ==========================
@@ -52,5 +72,9 @@ service post-api {
 	@doc "发布微型博客"
 	@handler PublishHandler
 	post /publish (PublishReq) returns (PublishResp)
+
+	@doc "删除微型博客"
+	@handler DeleteHandler
+	post /delete (DeleteReq) returns (DeleteResp)
 }
 

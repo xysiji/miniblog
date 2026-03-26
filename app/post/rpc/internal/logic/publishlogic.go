@@ -42,6 +42,7 @@ func (l *PublishLogic) Publish(in *post.PublishRequest) (*post.PublishResponse, 
 		Id:         postId,
 		UserId:     in.UserId,
 		Content:    in.Content,
+		Images:     in.Images,  // ====== 新增：将接收到的图片 JSON 字符串存入数据库 ======
 		CreateTime: time.Now(), // ✅ 修正为 CreateTime
 	}
 	// 3. 【分布式架构核心】：写操作强制路由到 Master 主库 (PostMasterModel)

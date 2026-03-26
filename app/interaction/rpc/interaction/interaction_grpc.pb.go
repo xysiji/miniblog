@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             v3.21.9
-// source: app/interaction/rpc/interaction.proto
+// source: interaction.proto
 
 package interaction
 
@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Interaction_Like_FullMethodName        = "/interaction.Interaction/Like"
-	Interaction_Comment_FullMethodName     = "/interaction.Interaction/Comment"
-	Interaction_CommentList_FullMethodName = "/interaction.Interaction/CommentList"
+	Interaction_Like_FullMethodName          = "/interaction.Interaction/Like"
+	Interaction_Unlike_FullMethodName        = "/interaction.Interaction/Unlike"
+	Interaction_Comment_FullMethodName       = "/interaction.Interaction/Comment"
+	Interaction_CommentDelete_FullMethodName = "/interaction.Interaction/CommentDelete"
+	Interaction_CommentList_FullMethodName   = "/interaction.Interaction/CommentList"
 )
 
 // InteractionClient is the client API for Interaction service.
@@ -30,10 +32,14 @@ const (
 //
 // 互动服务
 type InteractionClient interface {
-	// 点赞/取消点赞
+	// 点赞
 	Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
+	// 新增：取消点赞
+	Unlike(ctx context.Context, in *UnlikeRequest, opts ...grpc.CallOption) (*UnlikeResponse, error)
 	// 发表评论
 	Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
+	// 新增：删除评论
+	CommentDelete(ctx context.Context, in *CommentDeleteRequest, opts ...grpc.CallOption) (*CommentDeleteResponse, error)
 	// 获取评论列表
 	CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error)
 }
@@ -56,10 +62,30 @@ func (c *interactionClient) Like(ctx context.Context, in *LikeRequest, opts ...g
 	return out, nil
 }
 
+func (c *interactionClient) Unlike(ctx context.Context, in *UnlikeRequest, opts ...grpc.CallOption) (*UnlikeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnlikeResponse)
+	err := c.cc.Invoke(ctx, Interaction_Unlike_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *interactionClient) Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CommentResponse)
 	err := c.cc.Invoke(ctx, Interaction_Comment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interactionClient) CommentDelete(ctx context.Context, in *CommentDeleteRequest, opts ...grpc.CallOption) (*CommentDeleteResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommentDeleteResponse)
+	err := c.cc.Invoke(ctx, Interaction_CommentDelete_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,10 +108,14 @@ func (c *interactionClient) CommentList(ctx context.Context, in *CommentListRequ
 //
 // 互动服务
 type InteractionServer interface {
-	// 点赞/取消点赞
+	// 点赞
 	Like(context.Context, *LikeRequest) (*LikeResponse, error)
+	// 新增：取消点赞
+	Unlike(context.Context, *UnlikeRequest) (*UnlikeResponse, error)
 	// 发表评论
 	Comment(context.Context, *CommentRequest) (*CommentResponse, error)
+	// 新增：删除评论
+	CommentDelete(context.Context, *CommentDeleteRequest) (*CommentDeleteResponse, error)
 	// 获取评论列表
 	CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error)
 	mustEmbedUnimplementedInteractionServer()
@@ -101,8 +131,14 @@ type UnimplementedInteractionServer struct{}
 func (UnimplementedInteractionServer) Like(context.Context, *LikeRequest) (*LikeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Like not implemented")
 }
+func (UnimplementedInteractionServer) Unlike(context.Context, *UnlikeRequest) (*UnlikeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Unlike not implemented")
+}
 func (UnimplementedInteractionServer) Comment(context.Context, *CommentRequest) (*CommentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Comment not implemented")
+}
+func (UnimplementedInteractionServer) CommentDelete(context.Context, *CommentDeleteRequest) (*CommentDeleteResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CommentDelete not implemented")
 }
 func (UnimplementedInteractionServer) CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CommentList not implemented")
@@ -146,6 +182,24 @@ func _Interaction_Like_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Interaction_Unlike_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnlikeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionServer).Unlike(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Interaction_Unlike_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionServer).Unlike(ctx, req.(*UnlikeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Interaction_Comment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CommentRequest)
 	if err := dec(in); err != nil {
@@ -160,6 +214,24 @@ func _Interaction_Comment_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InteractionServer).Comment(ctx, req.(*CommentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Interaction_CommentDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommentDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionServer).CommentDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Interaction_CommentDelete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionServer).CommentDelete(ctx, req.(*CommentDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -194,8 +266,16 @@ var Interaction_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Interaction_Like_Handler,
 		},
 		{
+			MethodName: "Unlike",
+			Handler:    _Interaction_Unlike_Handler,
+		},
+		{
 			MethodName: "Comment",
 			Handler:    _Interaction_Comment_Handler,
+		},
+		{
+			MethodName: "CommentDelete",
+			Handler:    _Interaction_CommentDelete_Handler,
 		},
 		{
 			MethodName: "CommentList",
@@ -203,5 +283,5 @@ var Interaction_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "app/interaction/rpc/interaction.proto",
+	Metadata: "interaction.proto",
 }

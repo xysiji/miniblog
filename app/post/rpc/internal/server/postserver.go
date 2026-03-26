@@ -28,8 +28,19 @@ func (s *PostServer) Publish(ctx context.Context, in *post.PublishRequest) (*pos
 	return l.Publish(in)
 }
 
-// 新增：内部获取列表的 RPC 方法
+// 内部获取列表的 RPC 方法
 func (s *PostServer) List(ctx context.Context, in *post.ListRequest) (*post.ListResponse, error) {
 	l := logic.NewListLogic(ctx, s.svcCtx)
 	return l.List(in)
+}
+
+// 新增：详情和删除 RPC 方法
+func (s *PostServer) Detail(ctx context.Context, in *post.DetailRequest) (*post.DetailResponse, error) {
+	l := logic.NewDetailLogic(ctx, s.svcCtx)
+	return l.Detail(in)
+}
+
+func (s *PostServer) Delete(ctx context.Context, in *post.DeleteRequest) (*post.DeleteResponse, error) {
+	l := logic.NewDeleteLogic(ctx, s.svcCtx)
+	return l.Delete(in)
 }
