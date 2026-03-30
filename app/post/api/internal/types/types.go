@@ -29,11 +29,13 @@ type ListResp struct {
 }
 
 type PostItem struct {
-	Id       int64    `json:"id"`
-	UserId   int64    `json:"userId"`
-	Content  string   `json:"content"`
-	Images   []string `json:"images"`   // 新增：博文图片
-	CreateAt string   `json:"createAt"` // 返回友好的时间格式
+	Id           int64    `json:"id"`
+	UserId       int64    `json:"userId"`
+	Content      string   `json:"content"`
+	Images       []string `json:"images"`        // 新增：博文图片
+	LikeCount    int64    `json:"like_count"`    // 【网关新增】
+	CommentCount int64    `json:"comment_count"` // 【网关新增】
+	CreateAt     string   `json:"createAt"`      // 返回友好的时间格式
 }
 
 type PublishReq struct {

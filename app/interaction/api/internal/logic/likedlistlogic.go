@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv" // 引入 strconv 用于数字转字符串
 
 	"miniblog/app/interaction/api/internal/svc"
 	"miniblog/app/interaction/api/internal/types"
@@ -37,21 +36,20 @@ func (l *LikedListLogic) LikedList(req *types.LikedListReq) (resp *types.LikedLi
 		return nil, fmt.Errorf("未授权访问，请重新登录")
 	}
 
+	// 直接从底层拿到的也是 []int64
 	postIds, err := l.svcCtx.LikeRecordModel.FindLikedPostIdsByUserId(l.ctx, userId)
 	if err != nil {
 		l.Logger.Errorf("查询用户点赞列表失败: userId=%d, err=%v", userId, err)
 		return nil, fmt.Errorf("查询点赞列表失败")
 	}
 
-	// 将查询到的 []int64 转换为 []string，以避免前端 JS 精度丢失
-	strPostIds := make([]string, 0, len(postIds))
-	if postIds != nil {
-		for _, id := range postIds {
-			strPostIds = append(strPostIds, strconv.FormatInt(id, 10))
-		}
+	// 如果查询结果为 nil，初始化为一个空切片，保证前端拿到 [] 而不是 null
+	if postIds == nil {
+		postIds = make([]int64, 0)
 	}
 
+	// 【修复点】：直接返回 []int64，与 types.go 保持完全一致
 	return &types.LikedListResp{
-		PostIds: strPostIds,
+		PostIds: postIds,
 	}, nil
 }

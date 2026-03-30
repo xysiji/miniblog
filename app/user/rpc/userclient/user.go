@@ -14,15 +14,21 @@ import (
 )
 
 type (
-	LoginRequest     = user.LoginRequest
-	LoginResponse    = user.LoginResponse
-	RegisterRequest  = user.RegisterRequest
-	RegisterResponse = user.RegisterResponse
+	LoginRequest       = user.LoginRequest
+	LoginResponse      = user.LoginResponse
+	RegisterRequest    = user.RegisterRequest
+	RegisterResponse   = user.RegisterResponse
+	UserInfoRequest    = user.UserInfoRequest
+	UserInfoResponse   = user.UserInfoResponse
+	UserUpdateRequest  = user.UserUpdateRequest
+	UserUpdateResponse = user.UserUpdateResponse
 
 	User interface {
 		Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-		// 新增：处理登录的 RPC 方法
 		Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+		// 新增的 RPC 接口
+		UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
+		UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error)
 	}
 
 	defaultUser struct {
@@ -41,8 +47,18 @@ func (m *defaultUser) Register(ctx context.Context, in *RegisterRequest, opts ..
 	return client.Register(ctx, in, opts...)
 }
 
-// 新增：处理登录的 RPC 方法
 func (m *defaultUser) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	client := user.NewUserClient(m.cli.Conn())
 	return client.Login(ctx, in, opts...)
+}
+
+// 新增的 RPC 接口
+func (m *defaultUser) UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error) {
+	client := user.NewUserClient(m.cli.Conn())
+	return client.UserInfo(ctx, in, opts...)
+}
+
+func (m *defaultUser) UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error) {
+	client := user.NewUserClient(m.cli.Conn())
+	return client.UserUpdate(ctx, in, opts...)
 }

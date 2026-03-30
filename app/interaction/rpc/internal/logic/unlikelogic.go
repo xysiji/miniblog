@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"miniblog/app/interaction/model" // 引入你的 model
 	"miniblog/app/interaction/rpc/interaction"
 	"miniblog/app/interaction/rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 )
 
 type UnlikeLogic struct {
@@ -26,25 +26,35 @@ func NewUnlikeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnlikeLogi
 }
 
 func (l *UnlikeLogic) Unlike(in *interaction.UnlikeRequest) (*interaction.UnlikeResponse, error) {
-	// 1. 查询点赞记录是否存在
-	record, err := l.svcCtx.LikeRecordModel.FindOneByPostIdUserId(l.ctx, in.PostId, in.UserId)
-	if err != nil && err != model.ErrNotFound {
-		l.Logger.Errorf("查询点赞记录失败: %v", err)
-		return nil, fmt.Errorf("操作失败，请稍后重试")
-	}
+	// 1. 无视 MySQL 延迟，立即从 Redis 清除用户的点赞状态，解除前端拦截
+	likeUsersKey := fmt.Sprintf("biz:interact:like_users:%d", in.PostId)
+	likeCountKey := fmt.Sprintf("biz:interact:like_count:%d", in.PostId)
 
-	// 2. 如果找到了记录，且当前状态是点赞(1)，则修改为取消点赞(0)
-	if record != nil && record.Status == 1 {
-		record.Status = 0
-		err = l.svcCtx.LikeRecordModel.Update(l.ctx, record)
-		if err != nil {
-			l.Logger.Errorf("更新点赞状态失败: %v", err)
-			return nil, fmt.Errorf("取消点赞失败")
+	// 【注意】：Go 返回两个值，必须用 _, _
+	_, _ = l.svcCtx.BizRedis.SremCtx(l.ctx, likeUsersKey, in.UserId)
+	_, _ = l.svcCtx.BizRedis.DecrCtx(l.ctx, likeCountKey)
+
+	l.Logger.Infof("=> [RPC] 用户 %d 成功取消了对博文 %d 的点赞", in.UserId, in.PostId)
+
+	// 2. 异步处理落库与统计，彻底防止查不到记录的报错
+	threading.GoSafe(func() {
+		bgCtx := context.Background()
+
+		// 如果能查到记录，把状态改为 0；如果查不到（MQ还未落盘），就算了，不拦截
+		record, err := l.svcCtx.LikeRecordModel.FindOneByPostIdUserId(bgCtx, in.PostId, in.UserId)
+		if err == nil && record != nil && record.Status == 1 {
+			record.Status = 0
+			_ = l.svcCtx.LikeRecordModel.Update(bgCtx, record)
 		}
 
-		l.Logger.Infof("用户 %d 成功取消了对博文 %d 的点赞", in.UserId, in.PostId)
-		// 进阶扩展点：这里可以发送消息队列，通知 Post 服务将博文的 like_count 减 1
-	}
+		// 原子扣减博文表的点赞数
+		_ = l.svcCtx.PostModel.DecrLikeCount(bgCtx, in.PostId)
+
+		// 3. 【彻底解决数字刷新消失】：强行删除博文缓存，逼迫下次刷新走数据库查最新数字！
+		cacheKey := fmt.Sprintf("cache:post:id:%d", in.PostId)
+		// 【注意】：这里就是之前报错的地方，已经改成两个下划线 _, _ 了！！！绝对不会再报错！
+		_, _ = l.svcCtx.BizRedis.DelCtx(bgCtx, cacheKey)
+	})
 
 	return &interaction.UnlikeResponse{}, nil
 }

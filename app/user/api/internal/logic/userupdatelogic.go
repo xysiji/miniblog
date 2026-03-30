@@ -6,9 +6,11 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"miniblog/app/user/api/internal/svc"
 	"miniblog/app/user/api/internal/types"
+	"miniblog/app/user/rpc/userclient"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,24 +29,31 @@ func NewUserUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserUp
 		svcCtx: svcCtx,
 	}
 }
-func (l *UserUpdateLogic) UserUpdate(req *types.UserUpdateReq) (resp *types.UserUpdateResp, err error) {
-	// 假设从 JWT ctx 中获取了当前用户 ID
-	userId, _ := l.ctx.Value("userId").(json.Number).Int64()
 
-	// 查询原用户信息
-	userInfo, err := l.svcCtx.UserModel.FindOne(l.ctx, userId)
+func (l *UserUpdateLogic) UserUpdate(req *types.UserUpdateReq) (resp *types.UserUpdateResp, err error) {
+	// 1. 从 JWT 中安全提取 UserId
+	var userId int64
+	if uidVal := l.ctx.Value("userId"); uidVal != nil {
+		switch v := uidVal.(type) {
+		case json.Number:
+			userId, _ = v.Int64()
+		case float64:
+			userId = int64(v)
+		case string:
+			fmt.Sscanf(v, "%d", &userId)
+		}
+	}
+
+	// 2. 呼叫底层 RPC 执行更新
+	_, err = l.svcCtx.UserRpc.UserUpdate(l.ctx, &userclient.UserUpdateRequest{
+		UserId: userId,
+		Avatar: req.Avatar,
+		Bio:    req.Bio,
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	// 更新有变动的字段
-	if req.Avatar != "" {
-		userInfo.Avatar = req.Avatar
-	}
-	if req.Bio != "" {
-		userInfo.Bio = req.Bio
-	}
-
-	err = l.svcCtx.UserModel.Update(l.ctx, userInfo)
-	return &types.UserUpdateResp{}, err
+	return &types.UserUpdateResp{}, nil
 }

@@ -46,6 +46,8 @@ type (
 		Id         int64     `db:"id"`          // 全局唯一用户ID (雪花算法)
 		Username   string    `db:"username"`    // 用户名
 		Password   string    `db:"password"`    // 加密后的密码
+		Avatar     string    `db:"avatar"`      // 头像URL
+		Bio        string    `db:"bio"`         // 个人简介
 		CreateTime time.Time `db:"create_time"` // 创建时间
 		UpdateTime time.Time `db:"update_time"` // 更新时间
 	}
@@ -114,8 +116,8 @@ func (m *defaultUserModel) Insert(ctx context.Context, data *User) (sql.Result, 
 	userIdKey := fmt.Sprintf("%s%v", cacheUserIdPrefix, data.Id)
 	userUsernameKey := fmt.Sprintf("%s%v", cacheUserUsernamePrefix, data.Username)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, userRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Id, data.Username, data.Password)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, userRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.Id, data.Username, data.Password, data.Avatar, data.Bio)
 	}, userIdKey, userUsernameKey)
 	return ret, err
 }
@@ -130,7 +132,7 @@ func (m *defaultUserModel) Update(ctx context.Context, newData *User) error {
 	userUsernameKey := fmt.Sprintf("%s%v", cacheUserUsernamePrefix, data.Username)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, newData.Username, newData.Password, newData.Id)
+		return conn.ExecCtx(ctx, query, newData.Username, newData.Password, newData.Avatar, newData.Bio, newData.Id)
 	}, userIdKey, userUsernameKey)
 	return err
 }

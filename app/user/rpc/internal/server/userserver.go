@@ -28,8 +28,18 @@ func (s *UserServer) Register(ctx context.Context, in *user.RegisterRequest) (*u
 	return l.Register(in)
 }
 
-// 新增：处理登录的 RPC 方法
 func (s *UserServer) Login(ctx context.Context, in *user.LoginRequest) (*user.LoginResponse, error) {
 	l := logic.NewLoginLogic(ctx, s.svcCtx)
 	return l.Login(in)
+}
+
+// 新增的 RPC 接口
+func (s *UserServer) UserInfo(ctx context.Context, in *user.UserInfoRequest) (*user.UserInfoResponse, error) {
+	l := logic.NewUserInfoLogic(ctx, s.svcCtx)
+	return l.UserInfo(in)
+}
+
+func (s *UserServer) UserUpdate(ctx context.Context, in *user.UserUpdateRequest) (*user.UserUpdateResponse, error) {
+	l := logic.NewUserUpdateLogic(ctx, s.svcCtx)
+	return l.UserUpdate(in)
 }

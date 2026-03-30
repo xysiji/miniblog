@@ -3,6 +3,7 @@ syntax = "proto3";
 package user;
 option go_package = "./user";
 
+// --- 原有逻辑 ---
 message RegisterRequest {
   string username = 1;
   string password = 2;
@@ -12,7 +13,6 @@ message RegisterResponse {
   int64 user_id = 1;
 }
 
-// 新增：登录请求与响应
 message LoginRequest {
   string username = 1;
   string password = 2;
@@ -22,8 +22,34 @@ message LoginResponse {
   int64 user_id = 1;
 }
 
+// --- 新增：获取用户信息 ---
+message UserInfoRequest {
+  int64 user_id = 1;
+}
+
+message UserInfoResponse {
+  int64 user_id = 1;
+  string username = 2;
+  string avatar = 3;
+  string bio = 4;
+}
+
+// --- 新增：更新用户信息 ---
+message UserUpdateRequest {
+  int64 user_id = 1;
+  string avatar = 2;
+  string bio = 3;
+}
+
+message UserUpdateResponse {
+}
+
+// 用户基础服务
 service User {
   rpc Register(RegisterRequest) returns(RegisterResponse);
-  // 新增：处理登录的 RPC 方法
   rpc Login(LoginRequest) returns(LoginResponse);
+  
+  // 新增的 RPC 接口
+  rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
+  rpc UserUpdate(UserUpdateRequest) returns(UserUpdateResponse);
 }

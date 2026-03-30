@@ -14,11 +14,13 @@ type (
 // 新增：列表相关的结构体 (支持分页)
 type (
 	PostItem {
-		Id       int64    `json:"id"`
-		UserId   int64    `json:"userId"`
-		Content  string   `json:"content"`
-		Images   []string `json:"images"` // 新增：博文图片
-		CreateAt string   `json:"createAt"` // 返回友好的时间格式
+		Id           int64    `json:"id"`
+		UserId       int64    `json:"userId"`
+		Content      string   `json:"content"`
+		Images       []string `json:"images"` // 新增：博文图片
+		LikeCount    int64    `json:"like_count"` // 【网关新增】
+		CommentCount int64    `json:"comment_count"` // 【网关新增】
+		CreateAt     string   `json:"createAt"` // 返回友好的时间格式
 	}
 	ListReq {
 		Page     int64 `json:"page"` // 第几页

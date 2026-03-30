@@ -39,7 +39,7 @@ func (l *LoginLogic) getJwtToken(secretKey string, iat, seconds, userId int64) (
 }
 
 func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err error) {
-	// 1. 调用 RPC 进行账号密码校验 (注意这里严格使用 userclient.LoginRequest)
+	// 1. 调用 RPC 进行账号密码校验
 	rpcRes, err := l.svcCtx.UserRpc.Login(l.ctx, &userclient.LoginRequest{
 		Username: req.Username,
 		Password: req.Password,
@@ -56,11 +56,9 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 		return nil, err
 	}
 
-	// 3. 严格按照 types.LoginResp 结构体返回给前端
+	// 3. 【修复点】：严格按照 types.LoginResp 结构体返回给前端
 	return &types.LoginResp{
-		UserId:       rpcRes.UserId,
-		AccessToken:  jwtToken,
-		AccessExpire: now + accessExpire,
-		RefreshAfter: now + accessExpire/2, // 建议刷新时间
+		UserId: rpcRes.UserId,
+		Token:  jwtToken,
 	}, nil
 }

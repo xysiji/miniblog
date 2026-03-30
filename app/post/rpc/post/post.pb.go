@@ -184,8 +184,10 @@ type PostItem struct {
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
-	CreateTime    int64                  `protobuf:"varint,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` // 底层使用时间戳传递
-	Images        string                 `protobuf:"bytes,5,opt,name=images,proto3" json:"images,omitempty"`                            // 新增：博文图片 JSON 字符串
+	CreateTime    int64                  `protobuf:"varint,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`       // 底层使用时间戳传递
+	Images        string                 `protobuf:"bytes,5,opt,name=images,proto3" json:"images,omitempty"`                                  // 新增：博文图片 JSON 字符串
+	LikeCount     int64                  `protobuf:"varint,6,opt,name=like_count,json=likeCount,proto3" json:"like_count,omitempty"`          // 【绝对新增：点赞数】
+	CommentCount  int64                  `protobuf:"varint,7,opt,name=comment_count,json=commentCount,proto3" json:"comment_count,omitempty"` // 【绝对新增：评论数】
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -253,6 +255,20 @@ func (x *PostItem) GetImages() string {
 		return x.Images
 	}
 	return ""
+}
+
+func (x *PostItem) GetLikeCount() int64 {
+	if x != nil {
+		return x.LikeCount
+	}
+	return 0
+}
+
+func (x *PostItem) GetCommentCount() int64 {
+	if x != nil {
+		return x.CommentCount
+	}
+	return 0
 }
 
 type ListResponse struct {
@@ -499,14 +515,17 @@ const file_post_proto_rawDesc = "" +
 	"\apost_id\x18\x01 \x01(\x03R\x06postId\">\n" +
 	"\vListRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x03R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\"\x86\x01\n" +
+	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\"\xca\x01\n" +
 	"\bPostItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1f\n" +
 	"\vcreate_time\x18\x04 \x01(\x03R\n" +
 	"createTime\x12\x16\n" +
-	"\x06images\x18\x05 \x01(\tR\x06images\"H\n" +
+	"\x06images\x18\x05 \x01(\tR\x06images\x12\x1d\n" +
+	"\n" +
+	"like_count\x18\x06 \x01(\x03R\tlikeCount\x12#\n" +
+	"\rcomment_count\x18\a \x01(\x03R\fcommentCount\"H\n" +
 	"\fListResponse\x12\"\n" +
 	"\x04list\x18\x01 \x03(\v2\x0e.post.PostItemR\x04list\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\"(\n" +

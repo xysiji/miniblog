@@ -26,6 +26,8 @@ message PostItem {
   string content = 3;
   int64 create_time = 4; // 底层使用时间戳传递
   string images = 5;     // 新增：博文图片 JSON 字符串
+  int64 like_count = 6;    // 【绝对新增：点赞数】
+  int64 comment_count = 7; // 【绝对新增：评论数】
 }
 
 message ListResponse {

@@ -19,7 +19,6 @@ type CommentListLogic struct {
 	svcCtx *svc.ServiceContext
 }
 
-// 获取博文的评论列表
 func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CommentListLogic {
 	return &CommentListLogic{
 		Logger: logx.WithContext(ctx),
@@ -29,7 +28,6 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 }
 
 func (l *CommentListLogic) CommentList(req *types.CommentListReq) (resp *types.CommentListResp, err error) {
-	// 1. 设置分页默认值 (防御性编程)
 	page := req.Page
 	if page <= 0 {
 		page = 1
@@ -39,7 +37,6 @@ func (l *CommentListLogic) CommentList(req *types.CommentListReq) (resp *types.C
 		pageSize = 10
 	}
 
-	// 2. 呼叫底层 RPC 获取数据
 	rpcResp, err := l.svcCtx.InteractionRpc.CommentList(l.ctx, &interaction.CommentListRequest{
 		PostId:   req.PostId,
 		Page:     page,
@@ -49,19 +46,21 @@ func (l *CommentListLogic) CommentList(req *types.CommentListReq) (resp *types.C
 		return nil, err
 	}
 
-	// 3. 将 RPC 响应数据映射为前端 API 所需的 JSON 结构
-	var list []types.CommentItem
-	for _, item := range rpcResp.List {
-		list = append(list, types.CommentItem{
-			Id:         item.Id,
-			PostId:     item.PostId,
-			UserId:     item.UserId,
-			Content:    item.Content,
-			CreateTime: item.CreateTime,
-		})
+	// 【核心修复 3】：使用 make 强行初始化为空切片，绝对不给前端返回 null
+	list := make([]types.CommentItem, 0)
+
+	if rpcResp.List != nil {
+		for _, item := range rpcResp.List {
+			list = append(list, types.CommentItem{
+				Id:         item.Id,
+				PostId:     item.PostId,
+				UserId:     item.UserId,
+				Content:    item.Content,
+				CreateTime: item.CreateTime,
+			})
+		}
 	}
 
-	// 4. 返回组装好的数据
 	return &types.CommentListResp{
 		List:  list,
 		Total: rpcResp.Total,

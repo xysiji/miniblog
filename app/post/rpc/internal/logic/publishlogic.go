@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"database/sql" // 【新增】：引入 sql 包
 	"fmt"
 	"time"
 
@@ -37,14 +38,15 @@ func (l *PublishLogic) Publish(in *post.PublishRequest) (*post.PublishResponse, 
 	postId := node.Generate().Int64()
 
 	// 2. 组装待插入的数据库模型数据
-
 	newPost := &model.Post{
-		Id:         postId,
-		UserId:     in.UserId,
-		Content:    in.Content,
-		Images:     in.Images,  // ====== 新增：将接收到的图片 JSON 字符串存入数据库 ======
-		CreateTime: time.Now(), // ✅ 修正为 CreateTime
+		Id:      postId,
+		UserId:  in.UserId,
+		Content: in.Content,
+		// 【修复点】：将前端传来的普通 string 包装为数据库需要的 sql.NullString
+		Images:     sql.NullString{String: in.Images, Valid: in.Images != ""},
+		CreateTime: time.Now(),
 	}
+
 	// 3. 【分布式架构核心】：写操作强制路由到 Master 主库 (PostMasterModel)
 	_, err = l.svcCtx.PostMasterModel.Insert(l.ctx, newPost)
 	if err != nil {

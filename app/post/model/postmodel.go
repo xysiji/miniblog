@@ -16,11 +16,15 @@ type (
 		postModel
 		InsertWithId(ctx context.Context, data *Post) (sql.Result, error)
 
-		// --- B阶段新增：分页查询相关底层方法 ---
-		// 1. 查询某一页的博文列表 (按时间倒序)
+		// --- 分页查询相关底层方法 ---
 		FindPageListByPage(ctx context.Context, page, pageSize int64) ([]*Post, error)
-		// 2. 查询博文总条数 (用于分页计算)
 		Count(ctx context.Context) (int64, error)
+
+		// --- 终极闭环：统计数原子增减（自带缓存清理） ---
+		IncrLikeCount(ctx context.Context, id int64) error
+		DecrLikeCount(ctx context.Context, id int64) error
+		IncrCommentCount(ctx context.Context, id int64) error
+		DecrCommentCount(ctx context.Context, id int64) error
 	}
 
 	customPostModel struct {
@@ -35,31 +39,62 @@ func NewPostModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) Po
 }
 
 func (m *customPostModel) InsertWithId(ctx context.Context, data *Post) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (`id`, `user_id`, `content`) values (?, ?, ?)", m.table)
-	return m.ExecNoCacheCtx(ctx, query, data.Id, data.UserId, data.Content)
+	query := fmt.Sprintf("insert into %s (`id`, `user_id`, `content`, `images`) values (?, ?, ?, ?)", m.table)
+	return m.ExecNoCacheCtx(ctx, query, data.Id, data.UserId, data.Content, data.Images)
 }
 
-// B阶段新增实现：利用 QueryRowsNoCacheCtx 绕过行级缓存，直接查 MySQL 列表
 func (m *customPostModel) FindPageListByPage(ctx context.Context, page, pageSize int64) ([]*Post, error) {
-	// 核心逻辑：计算分页偏移量 (Offset)
-	// 如果是第 1 页，每页 10 条，跳过 (1-1)*10 = 0 条
-	// 如果是第 2 页，每页 10 条，跳过 (2-1)*10 = 10 条
 	offset := (page - 1) * pageSize
-
-	// 编写原生 SQL：按 ID 倒序（最新的在最前），限制条数和偏移量
 	query := fmt.Sprintf("select %s from %s order by id desc limit ? offset ?", postRows, m.table)
-
 	var resp []*Post
-	// 注意：查询多行数据必须用 QueryRowsNoCacheCtx
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, pageSize, offset)
 	return resp, err
 }
 
-// B阶段新增实现：查询数据总数
 func (m *customPostModel) Count(ctx context.Context) (int64, error) {
 	query := fmt.Sprintf("select count(*) from %s", m.table)
 	var count int64
-	// 注意：查询单行单列数据用 QueryRowNoCacheCtx
 	err := m.QueryRowNoCacheCtx(ctx, &count, query)
 	return count, err
+}
+
+// ===============================================
+// 以下为点赞数、评论数原子操作，ExecCtx 会自动清理缓存
+// ===============================================
+
+func (m *customPostModel) IncrLikeCount(ctx context.Context, id int64) error {
+	postIdKey := fmt.Sprintf("%s%v", cachePostIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set like_count = like_count + 1 where id = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, postIdKey)
+	return err
+}
+
+func (m *customPostModel) DecrLikeCount(ctx context.Context, id int64) error {
+	postIdKey := fmt.Sprintf("%s%v", cachePostIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		// 保证点赞数不出现负数
+		query := fmt.Sprintf("update %s set like_count = like_count - 1 where id = ? and like_count > 0", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, postIdKey)
+	return err
+}
+
+func (m *customPostModel) IncrCommentCount(ctx context.Context, id int64) error {
+	postIdKey := fmt.Sprintf("%s%v", cachePostIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set comment_count = comment_count + 1 where id = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, postIdKey)
+	return err
+}
+
+func (m *customPostModel) DecrCommentCount(ctx context.Context, id int64) error {
+	postIdKey := fmt.Sprintf("%s%v", cachePostIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set comment_count = comment_count - 1 where id = ? and comment_count > 0", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, postIdKey)
+	return err
 }

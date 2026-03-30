@@ -8,6 +8,7 @@ import (
 	"miniblog/app/interaction/rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 )
 
 type CommentDeleteLogic struct {
@@ -36,6 +37,10 @@ func (l *CommentDeleteLogic) CommentDelete(in *interaction.CommentDeleteRequest)
 	if comment.UserId != in.UserId {
 		return nil, fmt.Errorf("越权操作：无权删除他人的评论")
 	}
+	// 防御：防止重复删除导致统计数多扣
+	if comment.Status == 0 {
+		return nil, fmt.Errorf("该评论已被删除")
+	}
 
 	// 3. 执行软删除 (将状态置为 0)
 	comment.Status = 0
@@ -45,8 +50,19 @@ func (l *CommentDeleteLogic) CommentDelete(in *interaction.CommentDeleteRequest)
 		return nil, fmt.Errorf("删除失败，请稍后重试")
 	}
 
-	l.Logger.Infof("用户 %d 成功删除了评论 %d", in.UserId, in.CommentId)
-	// 进阶扩展点：这里可以发送消息队列，通知 Post 服务将博文的 comment_count 减 1
+	l.Logger.Infof("=> [RPC逻辑层] 用户 %d 成功删除了评论 %d", in.UserId, in.CommentId)
+
+	// 4. 【终极闭环】：基于防灾协程原子扣减博文表的评论数
+	threading.GoSafe(func() {
+		bgCtx := context.Background()
+		// 注意这里传入的是 comment.PostId，即这条评论所属的博文ID
+		decErr := l.svcCtx.PostModel.DecrCommentCount(bgCtx, comment.PostId)
+		if decErr != nil {
+			logx.Errorf("[异步统计异常] 扣减评论数失败: %v", decErr)
+		} else {
+			logx.Infof("=> [异步统计成功] 博文 %d 的总评论数已 -1", comment.PostId)
+		}
+	})
 
 	return &interaction.CommentDeleteResponse{}, nil
 }
