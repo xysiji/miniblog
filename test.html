@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>微型博客 API 联调测试台 (聚合主页版)</title>
+    <title>微型博客 API 联调测试台 (二级嵌套评论版)</title>
     <style>
         body { font-family: system-ui, sans-serif; background: #f4f4f5; margin: 0; padding: 20px; display: flex; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 450px; max-height: 90vh; overflow-y: auto; flex-shrink: 0; }
@@ -22,6 +22,9 @@
         .port-inputs input { font-size: 12px; padding: 4px; margin-bottom: 0; }
         .flex-row { display: flex; gap: 10px; }
         .flex-row button { flex: 1; }
+        /* 新增：三列网格供嵌套评论使用 */
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .grid-3 input { margin-bottom: 0; font-size: 12px;}
     </style>
 </head>
 <body>
@@ -73,6 +76,57 @@
         <input type="text" id="updateBio" placeholder="新个性签名">
         <button class="btn-orange" onclick="updateUserInfo()">💾 修改个人资料</button>
     </div>
+
+    <h3>📝 博文模块 (Post)</h3>
+    <div class="group">
+        <h4>1. 发布博文</h4>
+        <textarea id="postContent" rows="2" placeholder="博文内容..."></textarea>
+        <input type="text" id="postImages" placeholder="图片URL(多张逗号分隔)">
+        <button onclick="publishPost()">🚀 发布博文</button>
+    </div>
+    <div class="group">
+        <h4>2. 广场与管理</h4>
+        <button onclick="getPostList()">🌍 获取广场列表</button>
+        <input type="text" id="targetPostId" placeholder="在此输入目标博文 ID (公用)">
+        <button onclick="getPostDetail()">🔍 获取单条详情</button>
+        <button class="btn-red" onclick="deletePost()">🗑️ 删除该博文</button>
+    </div>
+
+    <h3>❤️ 互动模块 (Interaction)</h3>
+    <div class="group">
+        <h4>1. 点赞系统</h4>
+        <div class="flex-row">
+            <button class="btn-orange" onclick="likePost()">👍 点赞</button>
+            <button class="btn-red" onclick="unlikePost()">👎 取消点赞</button>
+        </div>
+        <button onclick="getLikedList()">📋 获取我的点赞列表</button>
+    </div>
+    
+    <div class="group" style="border-color: #28a745; background: #eaffea;">
+        <h4>2. 评论系统 (支持嵌套)</h4>
+        <input type="text" id="commentContent" placeholder="评论内容...">
+        
+        <label style="font-size: 11px; color: #666; display: block; margin-bottom: 2px;">楼层参数 (发表一级主评论请全部留空或填0)</label>
+        <div class="grid-3">
+            <input type="number" id="commentRootId" placeholder="根评论ID (Root)" title="你想回复的那个一级主评论的ID">
+            <input type="number" id="commentParentId" placeholder="父评论ID (Parent)" title="你直接回复的那条具体评论的ID">
+            <input type="number" id="commentReplyTo" placeholder="被回复人ID" title="被回复人的真实用户ID">
+        </div>
+        
+        <button class="btn-green" onclick="addComment()">💬 提交评论</button>
+        <button onclick="getCommentList()">📋 获取该博文评论列表 (见证树形拼装)</button>
+        
+        <input type="text" id="targetCommentId" placeholder="在此输入目标评论 ID" style="margin-top: 10px;">
+        <button class="btn-red" onclick="deleteComment()">🗑️ 删除该评论</button>
+    </div>
+
+    <h3>🔔 通知模块 (Notice)</h3>
+    <div class="group">
+        <button onclick="getNoticeList()">📥 获取通知列表</button>
+        <button class="btn-green" onclick="readAllNotices()">✅ 全部标记已读</button>
+        <input type="text" id="targetNoticeId" placeholder="在此输入单条通知 ID" style="margin-top: 10px;">
+        <button class="btn-orange" onclick="readSingleNotice()">👀 标记单条已读</button>
+    </div>
 </div>
 
 <div class="console">
@@ -86,20 +140,12 @@
 <script>
     async function request(path, method = 'POST', bodyData = null) {
         let baseUrl = "";
-        if (path.startsWith("/v1/user")) {
-            baseUrl = document.getElementById('userPort').value.replace(/\/$/, '');
-        } else if (path.startsWith("/v1/post")) {
-            baseUrl = document.getElementById('postPort').value.replace(/\/$/, '');
-        } else if (path.startsWith("/v1/interaction")) {
-            baseUrl = document.getElementById('interactPort').value.replace(/\/$/, '');
-        } else if (path.startsWith("/v1/notice")) {
-            baseUrl = document.getElementById('noticePort').value.replace(/\/$/, '');
-        } else if (path.startsWith("/v1/oss")) {
-            baseUrl = document.getElementById('ossPort').value.replace(/\/$/, '');
-        } else if (path.startsWith("/v1/relation")) {
-            // 【智能路由】新增对 Relation API 的支持
-            baseUrl = document.getElementById('relationPort').value.replace(/\/$/, '');
-        }
+        if (path.startsWith("/v1/user")) baseUrl = document.getElementById('userPort').value.replace(/\/$/, '');
+        else if (path.startsWith("/v1/post")) baseUrl = document.getElementById('postPort').value.replace(/\/$/, '');
+        else if (path.startsWith("/v1/interaction")) baseUrl = document.getElementById('interactPort').value.replace(/\/$/, '');
+        else if (path.startsWith("/v1/notice")) baseUrl = document.getElementById('noticePort').value.replace(/\/$/, '');
+        else if (path.startsWith("/v1/oss")) baseUrl = document.getElementById('ossPort').value.replace(/\/$/, '');
+        else if (path.startsWith("/v1/relation")) baseUrl = document.getElementById('relationPort').value.replace(/\/$/, '');
 
         const token = document.getElementById('globalToken').value;
         const out = document.getElementById('output');
@@ -111,13 +157,24 @@
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
         const options = { method, headers };
-        if (bodyData) options.body = JSON.stringify(bodyData);
+        if (bodyData) {
+            // 【核心黑魔法：发送前拦截】
+            // 将超过16位的字符串数字，脱掉两边的引号，伪装成大整数发给 Go 后端
+            let jsonStr = JSON.stringify(bodyData);
+            jsonStr = jsonStr.replace(/"(\d{16,})"/g, '$1');
+            options.body = jsonStr;
+        }
 
         try {
             const res = await fetch(`${baseUrl}${path}`, options);
             const text = await res.text();
             let json;
-            try { json = JSON.parse(text); } catch (e) {
+            try { 
+                // 【核心黑魔法：接收前拦截】
+                // 将后端返回的超过16位的裸露大整数，穿上引号变成字符串，防止 JS 吞掉精度
+                const safeText = text ? text.replace(/([":]\s*)(\d{16,})([,\}\]])/g, '$1"$2"$3') : "{}";
+                json = JSON.parse(safeText); 
+            } catch (e) {
                 out.innerText += `\n[响应状态] HTTP ${res.status}\n[非 JSON 拦截文本]\n${text}`;
                 return null;
             }
@@ -129,13 +186,68 @@
         }
     }
 
-    // ========== Relation & Profile ==========
-    async function followUser() { await request('/v1/relation/follow', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
-    async function unfollowUser() { await request('/v1/relation/unfollow', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
-    // 聚合 API 请求
-    async function getUserProfile() { await request('/v1/user/profile', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
+    // ========== 核心：提交嵌套评论逻辑 ==========
+    async function addComment() {
+        const postId = document.getElementById('targetPostId').value; // 移除了 Number()
+        if (!postId) return alert("请先输入目标博文ID！");
 
-    // ========== OSS 直传 ==========
+        const payload = {
+            post_id: postId, // 传入字符串，正则会自动剥离引号
+            content: document.getElementById('commentContent').value
+        };
+
+        const rootIdStr = document.getElementById('commentRootId').value;
+        const parentIdStr = document.getElementById('commentParentId').value;
+        const replyToStr = document.getElementById('commentReplyTo').value;
+
+        if (rootIdStr && rootIdStr !== "0") payload.root_id = rootIdStr;
+        if (parentIdStr && parentIdStr !== "0") payload.parent_id = parentIdStr;
+        if (replyToStr && replyToStr !== "0") payload.reply_to_user_id = replyToStr;
+
+        const res = await request('/v1/interaction/comment', 'POST', payload);
+        if (res) {
+            const commentId = res.comment_id || res.commentId || (res.data && res.data.comment_id);
+            if(commentId) document.getElementById('targetCommentId').value = commentId;
+        }
+    }
+
+    // ========== 全部移除 Number() 的包裹 ==========
+    async function followUser() { await request('/v1/relation/follow', 'POST', { targetUserId: document.getElementById('targetRelationId').value }); }
+    async function unfollowUser() { await request('/v1/relation/unfollow', 'POST', { targetUserId: document.getElementById('targetRelationId').value }); }
+    async function getUserProfile() { await request('/v1/user/profile', 'POST', { targetUserId: document.getElementById('targetRelationId').value }); }
+    
+    async function getPostList() { await request('/v1/post/list', 'POST', { page: 1, pageSize: 10 }); }
+    async function getPostDetail() { await request('/v1/post/detail', 'POST', { post_id: document.getElementById('targetPostId').value }); }
+    async function deletePost() { await request('/v1/post/delete', 'POST', { post_id: document.getElementById('targetPostId').value }); }
+    async function likePost() { await request('/v1/interaction/like', 'POST', { post_id: document.getElementById('targetPostId').value }); }
+    async function unlikePost() { await request('/v1/interaction/unlike', 'POST', { post_id: document.getElementById('targetPostId').value }); }
+    async function getLikedList() { await request('/v1/interaction/like/list', 'POST', {}); }
+    
+    async function getCommentList() { await request('/v1/interaction/comment/list', 'POST', { post_id: document.getElementById('targetPostId').value, page: 1, page_size: 20 }); }
+    async function deleteComment() { await request('/v1/interaction/comment/delete', 'POST', { comment_id: document.getElementById('targetCommentId').value }); }
+    
+    async function getNoticeList() { await request('/v1/notice/list', 'POST', { page: 1, pageSize: 20 }); }
+    async function readAllNotices() { await request('/v1/notice/readall', 'POST', {}); }
+    async function readSingleNotice() { await request('/v1/notice/read', 'POST', { notice_id: document.getElementById('targetNoticeId').value }); }
+    
+    // 原有的杂项保持不变
+    async function publishPost() {
+        const imagesRaw = document.getElementById('postImages').value;
+        const images = imagesRaw ? imagesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const res = await request('/v1/post/publish', 'POST', { content: document.getElementById('postContent').value, images: images });
+        if (res) { const postId = res.post_id || res.postId || (res.data && res.data.postId); if(postId) document.getElementById('targetPostId').value = postId; }
+    }
+    async function register() { await request('/v1/user/register', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value }); }
+    async function login() {
+        const res = await request('/v1/user/login', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value });
+        if (res && (res.token || res.AccessToken || (res.data && res.data.token))) {
+            document.getElementById('globalToken').value = res.token || res.AccessToken || res.data.token;
+            alert('登录成功！');
+        }
+    }
+    async function getUserInfo() { await request('/v1/user/info', 'POST', {}); }
+    async function updateUserInfo() { await request('/v1/user/update', 'POST', { avatar: document.getElementById('updateAvatar').value, bio: document.getElementById('updateBio').value }); }
+    
     async function uploadImage() {
         const fileInput = document.getElementById('uploadFileInput');
         const file = fileInput.files[0];
@@ -160,18 +272,6 @@
             }
         } catch (err) { out.innerText += `\n❌ 网络中断: ${err.message}`; }
     }
-
-    // ========== User ==========
-    async function register() { await request('/v1/user/register', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value }); }
-    async function login() {
-        const res = await request('/v1/user/login', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value });
-        if (res && (res.token || res.AccessToken || (res.data && res.data.token))) {
-            document.getElementById('globalToken').value = res.token || res.AccessToken || res.data.token;
-            alert('登录成功！');
-        }
-    }
-    async function getUserInfo() { await request('/v1/user/info', 'POST', {}); }
-    async function updateUserInfo() { await request('/v1/user/update', 'POST', { avatar: document.getElementById('updateAvatar').value, bio: document.getElementById('updateBio').value }); }
 </script>
 </body>
 </html>

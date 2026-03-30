@@ -46,23 +46,45 @@ func (l *CommentListLogic) CommentList(req *types.CommentListReq) (resp *types.C
 		return nil, err
 	}
 
-	// 【核心修复 3】：使用 make 强行初始化为空切片，绝对不给前端返回 null
-	list := make([]types.CommentItem, 0)
+	// ⚠️ 架构师修改：遵循 types.go，使用指针切片 []*types.CommentItem
+	roots := make([]*types.CommentItem, 0)
+	subsMap := make(map[int64][]*types.CommentItem)
 
 	if rpcResp.List != nil {
 		for _, item := range rpcResp.List {
-			list = append(list, types.CommentItem{
-				Id:         item.Id,
-				PostId:     item.PostId,
-				UserId:     item.UserId,
-				Content:    item.Content,
-				CreateTime: item.CreateTime,
-			})
+			apiItem := &types.CommentItem{
+				Id:            item.Id,
+				PostId:        item.PostId,
+				UserId:        item.UserId,
+				Username:      "待聚合",
+				Avatar:        "",
+				Content:       item.Content,
+				CreateTime:    item.CreateTime,
+				RootId:        item.RootId,
+				ParentId:      item.ParentId,
+				ReplyToUserId: item.ReplyToUserId,
+				ReplyToName:   "",
+				Children:      make([]*types.CommentItem, 0), // 初始化防止前端 null 报错
+			}
+
+			if item.RootId == 0 {
+				roots = append(roots, apiItem)
+			} else {
+				subsMap[item.RootId] = append(subsMap[item.RootId], apiItem)
+			}
+		}
+
+		// 树形挂载
+		for _, root := range roots {
+			if children, ok := subsMap[root.Id]; ok {
+				root.Children = children
+				root.ChildrenCount = int64(len(children))
+			}
 		}
 	}
 
 	return &types.CommentListResp{
-		List:  list,
+		List:  roots,
 		Total: rpcResp.Total,
 	}, nil
 }

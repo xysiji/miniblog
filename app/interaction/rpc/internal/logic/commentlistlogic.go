@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 
+	"miniblog/app/interaction/model"
 	"miniblog/app/interaction/rpc/interaction"
 	"miniblog/app/interaction/rpc/internal/svc"
 
@@ -23,34 +24,39 @@ func NewCommentListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Comme
 	}
 }
 
-// CommentList 获取评论列表
 func (l *CommentListLogic) CommentList(in *interaction.CommentListRequest) (*interaction.CommentListResponse, error) {
-	total, err := l.svcCtx.CommentModel.CountByPostIdShard(l.ctx, in.PostId)
+	// 1. 查询该博文下一级主评论 (root_id=0) 的总数
+	total, err := l.svcCtx.CommentModel.CountByPostIdRootIdShard(l.ctx, in.PostId, 0)
 	if err != nil {
-		l.Logger.Errorf("查询评论总数失败: %v", err)
+		l.Logger.Errorf("查询主评论总数失败: %v", err)
 		return nil, err
 	}
 
 	var list []*interaction.CommentItem
 	if total > 0 {
-		// 【核心修复 2】：计算真正的数据库偏移量 (Offset)，而不是直接传 Page！
 		offset := (in.Page - 1) * in.PageSize
 
-		// 传入计算好的 offset
-		comments, err := l.svcCtx.CommentModel.FindPageListByPostIdShard(l.ctx, in.PostId, int(offset), int(in.PageSize))
+		// 2. 查询主评论列表
+		mainComments, err := l.svcCtx.CommentModel.FindPageListByPostIdRootIdShard(l.ctx, in.PostId, 0, int(offset), int(in.PageSize))
 		if err != nil {
-			l.Logger.Errorf("查询评论列表失败: %v", err)
+			l.Logger.Errorf("查询主评论列表失败: %v", err)
 			return nil, err
 		}
 
-		for _, c := range comments {
-			list = append(list, &interaction.CommentItem{
-				Id:         c.Id,
-				PostId:     c.PostId,
-				UserId:     c.UserId,
-				Content:    c.Content,
-				CreateTime: c.CreateTime.Unix(),
-			})
+		var rootIds []int64
+		for _, c := range mainComments {
+			rootIds = append(rootIds, c.Id)
+			list = append(list, l.modelToProto(c))
+		}
+
+		// 3. 批量查询子评论（传入 postId 确保路由到同一个分表）
+		subComments, err := l.svcCtx.CommentModel.FindAllByRootIdsShard(l.ctx, in.PostId, rootIds)
+		if err != nil {
+			l.Logger.Errorf("批量查询子评论失败: %v", err)
+		}
+
+		for _, sc := range subComments {
+			list = append(list, l.modelToProto(sc))
 		}
 	}
 
@@ -58,4 +64,17 @@ func (l *CommentListLogic) CommentList(in *interaction.CommentListRequest) (*int
 		List:  list,
 		Total: total,
 	}, nil
+}
+
+func (l *CommentListLogic) modelToProto(m *model.Comment) *interaction.CommentItem {
+	return &interaction.CommentItem{
+		Id:            m.Id,
+		PostId:        m.PostId,
+		UserId:        m.UserId,
+		Content:       m.Content,
+		CreateTime:    m.CreateTime.Unix(),
+		RootId:        m.RootId,
+		ParentId:      m.ParentId,
+		ReplyToUserId: m.ReplyToUserId,
+	}
 }

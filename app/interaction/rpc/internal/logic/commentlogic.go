@@ -35,28 +35,38 @@ func (l *CommentLogic) Comment(in *interaction.CommentRequest) (*interaction.Com
 	}
 	commentId := node.Generate().Int64()
 
-	newComment := &model.Comment{
-		Id:      commentId,
-		PostId:  in.PostId,
-		UserId:  in.UserId,
-		Content: in.Content,
+	// 嵌套逻辑：判断是否为顶级主评论
+	rootId := in.RootId
+	if rootId == 0 {
+		rootId = 0
 	}
 
-	_, err = l.svcCtx.CommentModel.Insert(l.ctx, newComment)
+	newComment := &model.Comment{
+		Id:            commentId,
+		PostId:        in.PostId,
+		UserId:        in.UserId,
+		RootId:        rootId,           // 补充嵌套字段
+		ParentId:      in.ParentId,      // 补充嵌套字段
+		ReplyToUserId: in.ReplyToUserId, // 补充嵌套字段
+		Content:       in.Content,
+		Status:        1,
+	}
+
+	// ⚠️架构师修改：使用你定义的 InsertShard 才能正确写入分表
+	_, err = l.svcCtx.CommentModel.InsertShard(l.ctx, newComment)
 	if err != nil {
-		l.Logger.Errorf("评论写入 MySQL 失败: %v", err)
+		l.Logger.Errorf("评论写入分表失败: %v", err)
 		return nil, fmt.Errorf("评论发布失败，请稍后重试")
 	}
 
 	l.Logger.Infof("用户 %d 对博文 %d 发表了评论", in.UserId, in.PostId)
 
 	// ==========================================
-	// 3. 微服务联动：基于防灾协程的异步通知与统计更新
+	// 3. 微服务联动：基于防灾协程的异步通知与统计更新 (严格保留源码)
 	// ==========================================
 	threading.GoSafe(func() {
 		bgCtx := context.Background()
 
-		// 【核心闭环】：评论成功后，原子增加博文表的评论统计数
 		countErr := l.svcCtx.PostModel.IncrCommentCount(bgCtx, in.PostId)
 		if countErr != nil {
 			logx.Errorf("异步更新评论数失败: %v", countErr)
