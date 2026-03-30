@@ -8,7 +8,6 @@ type (
 	RegisterResp {
 		UserId int64 `json:"userId"`
 	}
-	// 新增：登录请求与响应体
 	LoginReq {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -17,7 +16,6 @@ type (
 		UserId int64  `json:"userId"`
 		Token  string `json:"token"`
 	}
-	// 新增：获取与修改用户信息
 	UserInfoReq  {}
 	UserInfoResp {
 		UserId   int64  `json:"userId"`
@@ -30,6 +28,19 @@ type (
 		Bio    string `json:"bio,optional"`
 	}
 	UserUpdateResp  {}
+	// ========== 新增：个人主页聚合接口 ==========
+	UserProfileReq {
+		TargetUserId int64 `json:"targetUserId"` // 你想看谁的主页
+	}
+	UserProfileResp {
+		UserId         int64  `json:"userId"`
+		Username       string `json:"username"`
+		Avatar         string `json:"avatar"`
+		Bio            string `json:"bio"`
+		FollowingCount int64  `json:"followingCount"` // 关注了多少人
+		FollowerCount  int64  `json:"followerCount"` // 有多少粉丝
+		IsFollow       bool   `json:"isFollow"` // 当前登录用户是否已经关注了他
+	}
 )
 
 @server (
@@ -39,12 +50,10 @@ service user-api {
 	@handler RegisterHandler
 	post /register (RegisterReq) returns (RegisterResp)
 
-	// 新增：登录接口
 	@handler LoginHandler
 	post /login (LoginReq) returns (LoginResp)
 }
 
-// 新增：私密路由组（必须登录）
 @server (
 	prefix: /v1/user
 	jwt:    Auth
@@ -57,5 +66,10 @@ service user-api {
 	@doc "修改用户信息"
 	@handler UserUpdateHandler
 	post /update (UserUpdateReq) returns (UserUpdateResp)
+
+	// 新增：获取个人主页聚合数据
+	@doc "获取个人主页"
+	@handler UserProfileHandler
+	post /profile (UserProfileReq) returns (UserProfileResp)
 }
 

@@ -1,0 +1,13 @@
+Name: relation-api
+Host: 0.0.0.0
+Port: 8892 # 给 Relation API 分配一个独立的新端口
+
+# JWT 鉴权配置 (必须和 User 模块里的完全一致)
+Auth:
+  AccessSecret: u7x9A2f8P5vQ3mR1wT6kY4zL0bC9eD2h
+  AccessExpire: 86400
+
+# 底层 Relation RPC 客户端连接配置
+RelationRpc:
+  Endpoints:
+    - 127.0.0.1:8084

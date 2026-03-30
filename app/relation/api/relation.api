@@ -1,0 +1,27 @@
+syntax = "v1"
+
+type (
+	FollowReq {
+		TargetUserId int64 `json:"targetUserId"`
+	}
+	FollowResp  {}
+	UnfollowReq {
+		TargetUserId int64 `json:"targetUserId"`
+	}
+	UnfollowResp  {}
+)
+
+@server (
+	prefix: /v1/relation
+	jwt:    Auth // 必须登录才能关注别人
+)
+service relation-api {
+	@doc "关注用户"
+	@handler FollowHandler
+	post /follow (FollowReq) returns (FollowResp)
+
+	@doc "取消关注用户"
+	@handler UnfollowHandler
+	post /unfollow (UnfollowReq) returns (UnfollowResp)
+}
+

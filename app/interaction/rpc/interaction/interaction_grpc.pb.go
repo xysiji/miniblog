@@ -24,24 +24,19 @@ const (
 	Interaction_Comment_FullMethodName       = "/interaction.Interaction/Comment"
 	Interaction_CommentDelete_FullMethodName = "/interaction.Interaction/CommentDelete"
 	Interaction_CommentList_FullMethodName   = "/interaction.Interaction/CommentList"
+	Interaction_LikedList_FullMethodName     = "/interaction.Interaction/LikedList"
 )
 
 // InteractionClient is the client API for Interaction service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// 互动服务
 type InteractionClient interface {
-	// 点赞
 	Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
-	// 新增：取消点赞
 	Unlike(ctx context.Context, in *UnlikeRequest, opts ...grpc.CallOption) (*UnlikeResponse, error)
-	// 发表评论
 	Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
-	// 新增：删除评论
 	CommentDelete(ctx context.Context, in *CommentDeleteRequest, opts ...grpc.CallOption) (*CommentDeleteResponse, error)
-	// 获取评论列表
 	CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error)
+	LikedList(ctx context.Context, in *LikedListRequest, opts ...grpc.CallOption) (*LikedListResponse, error)
 }
 
 type interactionClient struct {
@@ -102,22 +97,26 @@ func (c *interactionClient) CommentList(ctx context.Context, in *CommentListRequ
 	return out, nil
 }
 
+func (c *interactionClient) LikedList(ctx context.Context, in *LikedListRequest, opts ...grpc.CallOption) (*LikedListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LikedListResponse)
+	err := c.cc.Invoke(ctx, Interaction_LikedList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InteractionServer is the server API for Interaction service.
 // All implementations must embed UnimplementedInteractionServer
 // for forward compatibility.
-//
-// 互动服务
 type InteractionServer interface {
-	// 点赞
 	Like(context.Context, *LikeRequest) (*LikeResponse, error)
-	// 新增：取消点赞
 	Unlike(context.Context, *UnlikeRequest) (*UnlikeResponse, error)
-	// 发表评论
 	Comment(context.Context, *CommentRequest) (*CommentResponse, error)
-	// 新增：删除评论
 	CommentDelete(context.Context, *CommentDeleteRequest) (*CommentDeleteResponse, error)
-	// 获取评论列表
 	CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error)
+	LikedList(context.Context, *LikedListRequest) (*LikedListResponse, error)
 	mustEmbedUnimplementedInteractionServer()
 }
 
@@ -142,6 +141,9 @@ func (UnimplementedInteractionServer) CommentDelete(context.Context, *CommentDel
 }
 func (UnimplementedInteractionServer) CommentList(context.Context, *CommentListRequest) (*CommentListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CommentList not implemented")
+}
+func (UnimplementedInteractionServer) LikedList(context.Context, *LikedListRequest) (*LikedListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LikedList not implemented")
 }
 func (UnimplementedInteractionServer) mustEmbedUnimplementedInteractionServer() {}
 func (UnimplementedInteractionServer) testEmbeddedByValue()                     {}
@@ -254,6 +256,24 @@ func _Interaction_CommentList_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Interaction_LikedList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LikedListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InteractionServer).LikedList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Interaction_LikedList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InteractionServer).LikedList(ctx, req.(*LikedListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Interaction_ServiceDesc is the grpc.ServiceDesc for Interaction service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -280,6 +300,10 @@ var Interaction_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommentList",
 			Handler:    _Interaction_CommentList_Handler,
+		},
+		{
+			MethodName: "LikedList",
+			Handler:    _Interaction_LikedList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

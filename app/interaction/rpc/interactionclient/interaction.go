@@ -23,20 +23,18 @@ type (
 	CommentResponse       = interaction.CommentResponse
 	LikeRequest           = interaction.LikeRequest
 	LikeResponse          = interaction.LikeResponse
+	LikedListRequest      = interaction.LikedListRequest
+	LikedListResponse     = interaction.LikedListResponse
 	UnlikeRequest         = interaction.UnlikeRequest
 	UnlikeResponse        = interaction.UnlikeResponse
 
 	Interaction interface {
-		// 点赞
 		Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error)
-		// 新增：取消点赞
 		Unlike(ctx context.Context, in *UnlikeRequest, opts ...grpc.CallOption) (*UnlikeResponse, error)
-		// 发表评论
 		Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error)
-		// 新增：删除评论
 		CommentDelete(ctx context.Context, in *CommentDeleteRequest, opts ...grpc.CallOption) (*CommentDeleteResponse, error)
-		// 获取评论列表
 		CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error)
+		LikedList(ctx context.Context, in *LikedListRequest, opts ...grpc.CallOption) (*LikedListResponse, error)
 	}
 
 	defaultInteraction struct {
@@ -50,32 +48,32 @@ func NewInteraction(cli zrpc.Client) Interaction {
 	}
 }
 
-// 点赞
 func (m *defaultInteraction) Like(ctx context.Context, in *LikeRequest, opts ...grpc.CallOption) (*LikeResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.Like(ctx, in, opts...)
 }
 
-// 新增：取消点赞
 func (m *defaultInteraction) Unlike(ctx context.Context, in *UnlikeRequest, opts ...grpc.CallOption) (*UnlikeResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.Unlike(ctx, in, opts...)
 }
 
-// 发表评论
 func (m *defaultInteraction) Comment(ctx context.Context, in *CommentRequest, opts ...grpc.CallOption) (*CommentResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.Comment(ctx, in, opts...)
 }
 
-// 新增：删除评论
 func (m *defaultInteraction) CommentDelete(ctx context.Context, in *CommentDeleteRequest, opts ...grpc.CallOption) (*CommentDeleteResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.CommentDelete(ctx, in, opts...)
 }
 
-// 获取评论列表
 func (m *defaultInteraction) CommentList(ctx context.Context, in *CommentListRequest, opts ...grpc.CallOption) (*CommentListResponse, error) {
 	client := interaction.NewInteractionClient(m.cli.Conn())
 	return client.CommentList(ctx, in, opts...)
+}
+
+func (m *defaultInteraction) LikedList(ctx context.Context, in *LikedListRequest, opts ...grpc.CallOption) (*LikedListResponse, error) {
+	client := interaction.NewInteractionClient(m.cli.Conn())
+	return client.LikedList(ctx, in, opts...)
 }

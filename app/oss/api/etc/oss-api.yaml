@@ -1,0 +1,11 @@
+Name: oss-api
+Host: 0.0.0.0
+Port: 8004 # 假设 OSS 服务运行在 8004 端口
+Auth:
+  AccessSecret: u7x9A2f8P5vQ3mR1wT6kY4zL0bC9eD2h # 【注意】这里必须改成与 User 模块 user-api.yaml 中完全一致的秘钥
+  AccessExpire: 86400
+Minio:
+  Endpoint: "127.0.0.1:9000"     # MinIO API 地址
+  AccessKeyID: "admin"           # 对应 docker-compose 里的 root user
+  SecretAccessKey: "password123" # 对应 docker-compose 里的 root password
+  UseSSL: false                  # 本地开发不使用 HTTPS

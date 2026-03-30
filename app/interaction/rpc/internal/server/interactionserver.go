@@ -23,32 +23,32 @@ func NewInteractionServer(svcCtx *svc.ServiceContext) *InteractionServer {
 	}
 }
 
-// 点赞
 func (s *InteractionServer) Like(ctx context.Context, in *interaction.LikeRequest) (*interaction.LikeResponse, error) {
 	l := logic.NewLikeLogic(ctx, s.svcCtx)
 	return l.Like(in)
 }
 
-// 新增：取消点赞
 func (s *InteractionServer) Unlike(ctx context.Context, in *interaction.UnlikeRequest) (*interaction.UnlikeResponse, error) {
 	l := logic.NewUnlikeLogic(ctx, s.svcCtx)
 	return l.Unlike(in)
 }
 
-// 发表评论
 func (s *InteractionServer) Comment(ctx context.Context, in *interaction.CommentRequest) (*interaction.CommentResponse, error) {
 	l := logic.NewCommentLogic(ctx, s.svcCtx)
 	return l.Comment(in)
 }
 
-// 新增：删除评论
 func (s *InteractionServer) CommentDelete(ctx context.Context, in *interaction.CommentDeleteRequest) (*interaction.CommentDeleteResponse, error) {
 	l := logic.NewCommentDeleteLogic(ctx, s.svcCtx)
 	return l.CommentDelete(in)
 }
 
-// 获取评论列表
 func (s *InteractionServer) CommentList(ctx context.Context, in *interaction.CommentListRequest) (*interaction.CommentListResponse, error) {
 	l := logic.NewCommentListLogic(ctx, s.svcCtx)
 	return l.CommentList(in)
+}
+
+func (s *InteractionServer) LikedList(ctx context.Context, in *interaction.LikedListRequest) (*interaction.LikedListResponse, error) {
+	l := logic.NewLikedListLogic(ctx, s.svcCtx)
+	return l.LikedList(in)
 }

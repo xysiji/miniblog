@@ -1,0 +1,14 @@
+Name: relation.rpc
+ListenOn: 0.0.0.0:8084
+
+# 数据库和 Redis 缓存配置 (对齐集群规范)
+DataSource: root:root@tcp(127.0.0.1:3306)/miniblog_db?charset=utf8mb4&parseTime=True&loc=Local
+CacheRedis:
+  - Host: 127.0.0.1:6379
+    Pass: ""
+
+# 单机开发模式，暂不使用 Etcd 注册中心
+# Etcd:
+#   Hosts:
+#   - 127.0.0.1:2379
+#   Key: relation.rpc

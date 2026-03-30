@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Miniblog 微服务系统 - 中期检查演示看板</title>
+    <style>
+        :root { --primary: #2563eb; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --dark: #1f2937; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3f4f6; margin: 0; display: flex; height: 100vh; color: #374151; }
+        
+        /* 侧边栏 */
+        .sidebar { width: 280px; background: var(--dark); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 30px; color: #60a5fa; border-bottom: 1px solid #374151; padding-bottom: 10px; }
+        .port-group { margin-bottom: 20px; font-size: 0.85rem; }
+        .port-group label { display: block; margin-bottom: 5px; color: #9ca3af; }
+        .port-group input { width: 100%; background: #374151; border: 1px solid #4b5563; color: white; padding: 5px; border-radius: 4px; }
+        
+        /* 主内容区 */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .header { background: white; padding: 15px 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .token-info { font-size: 0.8rem; background: #fef3c7; padding: 5px 15px; border-radius: 20px; border: 1px solid #fde68a; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .content { flex: 1; padding: 25px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; overflow-y: auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .card h3 { margin-top: 0; font-size: 1rem; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 15px; }
+        
+        /* 按钮与输入 */
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, textarea { flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
+        button { cursor: pointer; padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85rem; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+
+        /* 控制台 */
+        .console-area { width: 400px; background: #0f172a; color: #34d399; padding: 20px; font-family: 'Consolas', monospace; font-size: 0.8rem; overflow-y: auto; border-left: 2px solid #334155; }
+        .log-entry { margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 5px; }
+        .log-time { color: #94a3b8; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>🚀 Miniblog 架构演示</h2>
+    
+    <div class="port-group">
+        <label>User API (8888)</label>
+        <input type="text" id="userPort" value="http://127.0.0.1:8888">
+    </div>
+    <div class="port-group">
+        <label>Post API (8889)</label>
+        <input type="text" id="postPort" value="http://127.0.0.1:8889">
+    </div>
+    <div class="port-group">
+        <label>Interaction API (8890)</label>
+        <input type="text" id="interactPort" value="http://127.0.0.1:8890">
+    </div>
+    <div class="port-group">
+        <label>Notice API (8891)</label>
+        <input type="text" id="noticePort" value="http://127.0.0.1:8891">
+    </div>
+    <div class="port-group">
+        <label>OSS API (8004)</label>
+        <input type="text" id="ossPort" value="http://127.0.0.1:8004">
+    </div>
+    
+    <div style="margin-top: auto; font-size: 0.75rem; color: #9ca3af;">
+        专业：数据科学与大数据技术<br>
+        阶段：中期检查演示版
+    </div>
+</div>
+
+<div class="main">
+    <div class="header">
+        <div style="font-weight: bold; font-size: 1.1rem;">功能演示面板</div>
+        <div class="token-info" id="tokenDisplay">未登录：鉴权 Token 为空</div>
+        <input type="hidden" id="globalToken">
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h3>👤 用户鉴权与资料</h3>
+            <div class="input-row">
+                <input type="text" id="username" placeholder="用户名" value="admin">
+                <input type="password" id="password" placeholder="密码" value="123456">
+            </div>
+            <div class="input-row">
+                <button class="btn-success" style="flex:1" onclick="handleAuth('/v1/user/register')">注册</button>
+                <button class="btn-primary" style="flex:1" onclick="login()">登录并注入 Token</button>
+            </div>
+            <hr style="border: 0.5px solid #eee; margin: 15px 0;">
+            <div class="input-row">
+                <button class="btn-warning" style="flex:1" onclick="request('/v1/user/info')">获取个人资料</button>
+            </div>
+            <div class="input-row">
+                <input type="text" id="avatarUrl" placeholder="头像URL">
+                <button class="btn-primary" onclick="updateProfile()">保存更新</button>
+            </div>
+        </div>
+
+        <div class="card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+            <h3>☁️ 分布式存储 (OSS/MinIO 直传)</h3>
+            <p style="font-size: 0.8rem; color: #666;">流程：向后端申请签名 -> 客户端直传 MinIO -> 拿到永久链接</p>
+            <div class="input-row">
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="btn-success" onclick="uploadFlow()">开始直传演示</button>
+            </div>
+            <div id="uploadPreview" style="margin-top:10px; font-size: 0.8rem; display: none;">
+                ✅ 链接已生成：<a id="linkRef" href="#" target="_blank" style="color: var(--primary);">点击查看</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📝 内容发布与广场</h3>
+            <textarea id="postContent" rows="3" placeholder="说点什么吧..."></textarea>
+            <div class="input-row">
+                <input type="text" id="postImg" placeholder="配图链接 (可选)">
+                <button class="btn-primary" onclick="publishPost()">发布博文</button>
+            </div>
+            <div class="input-row">
+                <button class="btn-warning" style="flex:1" onclick="request('/v1/post/list', {page:1, pageSize:10}, 'postPort')">拉取广场列表</button>
+                <input type="number" id="targetPostId" placeholder="目标博文ID" style="width:100px; flex:none;">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>❤️ 社交互动 (Interaction)</h3>
+            <div class="input-row">
+                <button class="btn-primary" style="flex:1" onclick="interact('/v1/interaction/like')">👍 点赞</button>
+                <button class="btn-danger" style="flex:1" onclick="interact('/v1/interaction/unlike')">👎 取消</button>
+            </div>
+            <div class="input-row">
+                <input type="text" id="commentText" placeholder="写评论...">
+                <button class="btn-success" onclick="comment()">提交评论</button>
+            </div>
+            <button class="btn-warning" style="width:100%; margin-top:5px;" onclick="interact('/v1/interaction/comment/list')">查看该博文下的所有评论</button>
+        </div>
+
+        <div class="card">
+            <h3>🔔 实时通知中心 (Notice)</h3>
+            <div class="input-row">
+                <button class="btn-primary" style="flex:1" onclick="request('/v1/notice/list', {page:1, pageSize:10}, 'noticePort')">获取未读通知</button>
+                <button class="btn-success" style="flex:1" onclick="request('/v1/notice/readall', {}, 'noticePort')">全部标为已读</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="console-area" id="console">
+    <div style="font-weight: bold; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 10px; color: white;">系统日志实时输出</div>
+</div>
+
+<script>
+    const log = (msg, type = 'info') => {
+        const consoleEl = document.getElementById('console');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const now = new Date().toLocaleTimeString();
+        entry.innerHTML = `<span class="log-time">[${now}]</span> <span style="color:${type === 'error' ? '#f87171' : '#34d399'}">${msg}</span>`;
+        consoleEl.prepend(entry);
+    };
+
+    async function request(path, data = {}, portId = 'userPort') {
+        const baseUrl = document.getElementById(portId).value;
+        const token = document.getElementById('globalToken').value;
+        const url = `${baseUrl}${path}`;
+        
+        log(`发送请求: ${path}...`);
+        
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            log(`响应结果: ${JSON.stringify(result)}`);
+            return result;
+        } catch (e) {
+            log(`请求失败: ${e.message}`, 'error');
+            return null;
+        }
+    }
+
+    // 核心业务流
+    async function login() {
+        const res = await request('/v1/user/login', {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        });
+        if (res && res.token) {
+            document.getElementById('globalToken').value = res.token;
+            document.getElementById('tokenDisplay').innerText = `已登录 Token: ${res.token.substring(0, 30)}...`;
+            log('✅ 登录成功，鉴权信息已注入上下文');
+        }
+    }
+
+    async function uploadFlow() {
+        const file = document.getElementById('fileInput').files[0];
+        if (!file) return alert('请先选择文件');
+        
+        // 1. 申请签名
+        const signRes = await request('/v1/oss/presigned-url', {
+            type: 1, 
+            fileExt: file.name.substring(file.name.lastIndexOf('.'))
+        }, 'ossPort');
+
+        if (!signRes) return;
+
+        // 2. 直传 MinIO
+        log('正在直传 MinIO 节点...');
+        const putRes = await fetch(signRes.uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type }
+        });
+
+        if (putRes.ok) {
+            log('✅ 物理上传成功！永久链接已生成');
+            document.getElementById('avatarUrl').value = signRes.downloadUrl;
+            document.getElementById('postImg').value = signRes.downloadUrl;
+            document.getElementById('uploadPreview').style.display = 'block';
+            document.getElementById('linkRef').href = signRes.downloadUrl;
+        }
+    }
+
+    // 其他快捷函数
+    async function updateProfile() {
+        await request('/v1/user/update', { avatar: document.getElementById('avatarUrl').value });
+    }
+    async function publishPost() {
+        const img = document.getElementById('postImg').value;
+        await request('/v1/post/publish', { 
+            content: document.getElementById('postContent').value,
+            images: img ? [img] : []
+        }, 'postPort');
+    }
+    async function interact(path) {
+        await request(path, { post_id: parseInt(document.getElementById('targetPostId').value) }, 'interactPort');
+    }
+    async function comment() {
+        await request('/v1/interaction/comment', { 
+            post_id: parseInt(document.getElementById('targetPostId').value),
+            content: document.getElementById('commentText').value
+        }, 'interactPort');
+    }
+</script>
+</body>
+</html>

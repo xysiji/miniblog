@@ -45,7 +45,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: LikeHandler(serverCtx),
 			},
 			{
-				// 获取当前用户点赞过的博文ID列表
+				// 获取点赞列表
 				Method:  http.MethodPost,
 				Path:    "/like/list",
 				Handler: LikedListHandler(serverCtx),

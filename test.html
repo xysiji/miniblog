@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>微型博客 API 联调测试台 (全量接口终极版)</title>
+    <title>微型博客 API 联调测试台 (聚合主页版)</title>
     <style>
         body { font-family: system-ui, sans-serif; background: #f4f4f5; margin: 0; padding: 20px; display: flex; gap: 20px; }
         .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 450px; max-height: 90vh; overflow-y: auto; flex-shrink: 0; }
@@ -16,6 +16,7 @@
         .btn-green { background: #28a745; } .btn-green:hover { background: #218838; }
         .btn-red { background: #dc3545; } .btn-red:hover { background: #c82333; }
         .btn-orange { background: #fd7e14; } .btn-orange:hover { background: #e36a00; }
+        .btn-purple { background: #6f42c1; } .btn-purple:hover { background: #5a32a3; }
         .token-box { background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #ffe69c; }
         .port-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
         .port-inputs input { font-size: 12px; padding: 4px; margin-bottom: 0; }
@@ -34,69 +35,43 @@
             <input type="text" id="postPort" value="http://127.0.0.1:8889" title="Post API">
             <input type="text" id="interactPort" value="http://127.0.0.1:8890" title="Interact API">
             <input type="text" id="noticePort" value="http://127.0.0.1:8891" title="Notice API">
+            <input type="text" id="ossPort" value="http://127.0.0.1:8004" title="OSS API">
+            <input type="text" id="relationPort" value="http://127.0.0.1:8892" title="Relation API">
         </div>
         <label style="font-size: 12px; display: block; margin-top: 5px;">当前全局 Token:</label>
         <input type="text" id="globalToken" placeholder="登录后自动填充" readonly style="background: #eee; margin-bottom: 0;">
     </div>
 
+    <h3>🔗 关系与聚合主页 (Relation & Profile)</h3>
+    <div class="group" style="border-color: #6f42c1; background: #f3e8ff;">
+        <h4>用户关系图谱</h4>
+        <input type="text" id="targetRelationId" placeholder="在此输入目标用户 ID">
+        <div class="flex-row">
+            <button class="btn-green" onclick="followUser()">➕ 关注 (Follow)</button>
+            <button class="btn-red" onclick="unfollowUser()">➖ 取关 (Unfollow)</button>
+        </div>
+        <button class="btn-purple" onclick="getUserProfile()" style="margin-top: 5px;">👤 查看该用户的个人主页聚合数据</button>
+    </div>
+
+    <h3>☁️ 对象存储 (OSS)</h3>
+    <div class="group" style="border-color: #0066cc; background: #e6f2ff;">
+        <input type="file" id="uploadFileInput" accept="image/*" style="background: white;">
+        <button class="btn-green" onclick="uploadImage()">📤 一键上传图片</button>
+        <input type="text" id="resultDownloadUrl" placeholder="上传成功后的链接" readonly style="background: #eee; margin-top: 5px;">
+    </div>
+
     <h3>👤 用户模块 (User)</h3>
     <div class="group">
-        <h4>1. 账号操作</h4>
         <input type="text" id="loginUsername" placeholder="用户名" value="apifox_user">
         <input type="password" id="loginPassword" placeholder="密码" value="123">
         <div class="flex-row">
             <button class="btn-green" onclick="register()">✨ 注册</button>
             <button onclick="login()">⚡ 登录</button>
         </div>
-    </div>
-    <div class="group">
-        <h4>2. 资料管理</h4>
-        <button onclick="getUserInfo()">📄 获取我的资料 (Info)</button>
-        <input type="text" id="updateAvatar" placeholder="新头像 URL">
+        <button onclick="getUserInfo()" style="margin-top:5px;">📄 获取我的资料 (Info)</button>
+        <input type="text" id="updateAvatar" placeholder="新头像 URL" style="margin-top:5px;">
         <input type="text" id="updateBio" placeholder="新个性签名">
         <button class="btn-orange" onclick="updateUserInfo()">💾 修改个人资料</button>
-    </div>
-
-    <h3>📝 博文模块 (Post)</h3>
-    <div class="group">
-        <h4>1. 发布博文</h4>
-        <textarea id="postContent" rows="2" placeholder="博文内容..."></textarea>
-        <input type="text" id="postImages" placeholder="图片URL(多张逗号分隔)">
-        <button onclick="publishPost()">🚀 发布博文</button>
-    </div>
-    <div class="group">
-        <h4>2. 广场与管理</h4>
-        <button onclick="getPostList()">🌍 获取广场列表</button>
-        <input type="text" id="targetPostId" placeholder="在此输入目标博文 ID (公用)">
-        <button onclick="getPostDetail()">🔍 获取单条详情</button>
-        <button class="btn-red" onclick="deletePost()">🗑️ 删除该博文</button>
-    </div>
-
-    <h3>❤️ 互动模块 (Interaction)</h3>
-    <div class="group">
-        <h4>1. 点赞系统</h4>
-        <div class="flex-row">
-            <button class="btn-orange" onclick="likePost()">👍 点赞</button>
-            <button class="btn-red" onclick="unlikePost()">👎 取消点赞</button>
-        </div>
-        <button onclick="getLikedList()">📋 获取我的点赞列表</button>
-    </div>
-    <div class="group">
-        <h4>2. 评论系统</h4>
-        <input type="text" id="commentContent" placeholder="评论内容...">
-        <button class="btn-green" onclick="addComment()">💬 提交评论</button>
-        <button onclick="getCommentList()">📋 获取该博文评论列表</button>
-        <input type="text" id="targetCommentId" placeholder="在此输入目标评论 ID" style="margin-top: 10px;">
-        <button class="btn-red" onclick="deleteComment()">🗑️ 删除该评论</button>
-    </div>
-
-    <h3>🔔 通知模块 (Notice)</h3>
-    <div class="group">
-        <h4>消息中心</h4>
-        <button onclick="getNoticeList()">📥 获取通知列表</button>
-        <button class="btn-green" onclick="readAllNotices()">✅ 全部标记已读</button>
-        <input type="text" id="targetNoticeId" placeholder="在此输入单条通知 ID" style="margin-top: 10px;">
-        <button class="btn-orange" onclick="readSingleNotice()">👀 标记单条已读</button>
     </div>
 </div>
 
@@ -110,7 +85,6 @@
 
 <script>
     async function request(path, method = 'POST', bodyData = null) {
-        // 【智能路由】：根据路径前缀自动打向对应的微服务端口
         let baseUrl = "";
         if (path.startsWith("/v1/user")) {
             baseUrl = document.getElementById('userPort').value.replace(/\/$/, '');
@@ -120,6 +94,11 @@
             baseUrl = document.getElementById('interactPort').value.replace(/\/$/, '');
         } else if (path.startsWith("/v1/notice")) {
             baseUrl = document.getElementById('noticePort').value.replace(/\/$/, '');
+        } else if (path.startsWith("/v1/oss")) {
+            baseUrl = document.getElementById('ossPort').value.replace(/\/$/, '');
+        } else if (path.startsWith("/v1/relation")) {
+            // 【智能路由】新增对 Relation API 的支持
+            baseUrl = document.getElementById('relationPort').value.replace(/\/$/, '');
         }
 
         const token = document.getElementById('globalToken').value;
@@ -137,90 +116,62 @@
         try {
             const res = await fetch(`${baseUrl}${path}`, options);
             const text = await res.text();
-            
             let json;
-            try {
-                json = JSON.parse(text);
-            } catch (e) {
-                out.innerText += `\n[响应状态] HTTP ${res.status}\n[非 JSON 拦截文本 (可能是 404 或微服务内部报错)]\n${text}`;
+            try { json = JSON.parse(text); } catch (e) {
+                out.innerText += `\n[响应状态] HTTP ${res.status}\n[非 JSON 拦截文本]\n${text}`;
                 return null;
             }
-            
             out.innerText += `\n[响应状态] HTTP ${res.status}\n[返回结果]\n${JSON.stringify(json, null, 2)}`;
             return json;
         } catch (err) {
-            out.innerText += `\n[网络致命错误] ${err.message}\n可能原因：1. 后端未启动 2. 端口配置错误 3. 跨域(CORS)未开启`;
+            out.innerText += `\n[网络致命错误] ${err.message}`;
             throw err;
         }
     }
 
-    // ========== User ==========
-    async function register() {
-        await request('/v1/user/register', 'POST', {
-            username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value
-        });
+    // ========== Relation & Profile ==========
+    async function followUser() { await request('/v1/relation/follow', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
+    async function unfollowUser() { await request('/v1/relation/unfollow', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
+    // 聚合 API 请求
+    async function getUserProfile() { await request('/v1/user/profile', 'POST', { targetUserId: Number(document.getElementById('targetRelationId').value) }); }
+
+    // ========== OSS 直传 ==========
+    async function uploadImage() {
+        const fileInput = document.getElementById('uploadFileInput');
+        const file = fileInput.files[0];
+        const out = document.getElementById('output');
+        if (!file) return alert("请先选择图片");
+        const token = document.getElementById('globalToken').value;
+        if (!token) return alert("请先登录");
+
+        const fileExt = file.name.substring(file.name.lastIndexOf('.'));
+        const signRes = await request('/v1/oss/presigned-url', 'POST', { type: 1, fileExt: fileExt });
+        if (!signRes || !signRes.uploadUrl) return;
+
+        out.innerText += `\n[2/2] 正在直传 MinIO... PUT ${signRes.uploadUrl.split('?')[0]}\n`;
+        try {
+            const putRes = await fetch(signRes.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'application/octet-stream' } });
+            if (putRes.ok) {
+                out.innerText += `\n✅ 直传成功！永久地址: ${signRes.downloadUrl}`;
+                document.getElementById('resultDownloadUrl').value = signRes.downloadUrl;
+                document.getElementById('updateAvatar').value = signRes.downloadUrl;
+            } else {
+                out.innerText += `\n❌ MinIO 拒绝上传，状态码: ${putRes.status}`;
+            }
+        } catch (err) { out.innerText += `\n❌ 网络中断: ${err.message}`; }
     }
 
+    // ========== User ==========
+    async function register() { await request('/v1/user/register', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value }); }
     async function login() {
-        const res = await request('/v1/user/login', 'POST', {
-            username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value
-        });
-        if (res) {
-            const token = res.token || res.AccessToken || (res.data && res.data.token);
-            if (token) {
-                document.getElementById('globalToken').value = token;
-                alert('登录成功，Token 已自动注入！');
-            }
+        const res = await request('/v1/user/login', 'POST', { username: document.getElementById('loginUsername').value, password: document.getElementById('loginPassword').value });
+        if (res && (res.token || res.AccessToken || (res.data && res.data.token))) {
+            document.getElementById('globalToken').value = res.token || res.AccessToken || res.data.token;
+            alert('登录成功！');
         }
     }
     async function getUserInfo() { await request('/v1/user/info', 'POST', {}); }
-    async function updateUserInfo() {
-        await request('/v1/user/update', 'POST', {
-            avatar: document.getElementById('updateAvatar').value,
-            bio: document.getElementById('updateBio').value
-        });
-    }
-
-    // ========== Post ==========
-    async function publishPost() {
-        const imagesRaw = document.getElementById('postImages').value;
-        const images = imagesRaw ? imagesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
-        const res = await request('/v1/post/publish', 'POST', {
-            content: document.getElementById('postContent').value,
-            images: images
-        });
-        if (res) {
-            const postId = res.post_id || res.postId || (res.data && res.data.postId);
-            if(postId) document.getElementById('targetPostId').value = postId;
-        }
-    }
-    async function getPostList() { await request('/v1/post/list', 'POST', { page: 1, pageSize: 10 }); }
-    async function getPostDetail() { await request('/v1/post/detail', 'POST', { post_id: Number(document.getElementById('targetPostId').value) }); }
-    async function deletePost() { await request('/v1/post/delete', 'POST', { post_id: Number(document.getElementById('targetPostId').value) }); }
-
-    // ========== Interaction ==========
-    async function likePost() { await request('/v1/interaction/like', 'POST', { post_id: Number(document.getElementById('targetPostId').value) }); }
-    async function unlikePost() { await request('/v1/interaction/unlike', 'POST', { post_id: Number(document.getElementById('targetPostId').value) }); }
-    async function getLikedList() { await request('/v1/interaction/like/list', 'POST', {}); }
-    async function addComment() {
-        const res = await request('/v1/interaction/comment', 'POST', {
-            post_id: Number(document.getElementById('targetPostId').value),
-            content: document.getElementById('commentContent').value
-        });
-        if (res) {
-            const commentId = res.comment_id || res.commentId || (res.data && res.data.comment_id);
-            if(commentId) document.getElementById('targetCommentId').value = commentId;
-        }
-    }
-    async function getCommentList() { await request('/v1/interaction/comment/list', 'POST', { post_id: Number(document.getElementById('targetPostId').value), page: 1, page_size: 20 }); }
-    async function deleteComment() { await request('/v1/interaction/comment/delete', 'POST', { comment_id: Number(document.getElementById('targetCommentId').value) }); }
-
-    // ========== Notice ==========
-    async function getNoticeList() { await request('/v1/notice/list', 'POST', { page: 1, pageSize: 20 }); }
-    async function readAllNotices() { await request('/v1/notice/readall', 'POST', {}); }
-    async function readSingleNotice() { await request('/v1/notice/read', 'POST', { notice_id: Number(document.getElementById('targetNoticeId').value) }); }
+    async function updateUserInfo() { await request('/v1/user/update', 'POST', { avatar: document.getElementById('updateAvatar').value, bio: document.getElementById('updateBio').value }); }
 </script>
 </body>
 </html>

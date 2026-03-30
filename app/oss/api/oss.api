@@ -1,0 +1,30 @@
+syntax = "v1"
+
+type (
+	// 获取预签名直传URL的请求体
+	PresignedUrlReq {
+		// 业务场景分类：例如 1-用户头像，2-帖子配图 (方便后端按目录隔离管理)
+		Type int `json:"type"`
+		// 文件的后缀名：例如 ".png", ".jpg", ".mp4" (后端将结合UUID生成唯一文件名)
+		FileExt string `json:"fileExt"`
+	}
+	// 获取预签名直传URL的响应体
+	PresignedUrlResp {
+		// 供客户端执行 PUT 请求上传文件的临时安全URL（含签名参数，有效时间通常较短）
+		UploadUrl string `json:"uploadUrl"`
+		// 文件上传成功后，该文件在系统中的永久访问/下载地址 (需后续提交给 User 或 Post 模块落库)
+		DownloadUrl string `json:"downloadUrl"`
+	}
+)
+
+// 安全铁律：上传接口必须鉴权，防止恶意用户刷爆我们服务器的存储和带宽
+@server (
+	prefix: /v1/oss
+	jwt:    Auth
+)
+service oss-api {
+	@doc "申请 MinIO 客户端直传的 Presigned URL"
+	@handler PresignedUrlHandler
+	post /presigned-url (PresignedUrlReq) returns (PresignedUrlResp)
+}
+

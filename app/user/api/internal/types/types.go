@@ -32,6 +32,20 @@ type UserInfoResp struct {
 	Bio      string `json:"bio"`
 }
 
+type UserProfileReq struct {
+	TargetUserId int64 `json:"targetUserId"` // 你想看谁的主页
+}
+
+type UserProfileResp struct {
+	UserId         int64  `json:"userId"`
+	Username       string `json:"username"`
+	Avatar         string `json:"avatar"`
+	Bio            string `json:"bio"`
+	FollowingCount int64  `json:"followingCount"` // 关注了多少人
+	FollowerCount  int64  `json:"followerCount"`  // 有多少粉丝
+	IsFollow       bool   `json:"isFollow"`       // 当前登录用户是否已经关注了他
+}
+
 type UserUpdateReq struct {
 	Avatar string `json:"avatar,optional"`
 	Bio    string `json:"bio,optional"`

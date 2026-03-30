@@ -37,6 +37,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: UserInfoHandler(serverCtx),
 			},
 			{
+				// 获取个人主页
+				Method:  http.MethodPost,
+				Path:    "/profile",
+				Handler: UserProfileHandler(serverCtx),
+			},
+			{
 				// 修改用户信息
 				Method:  http.MethodPost,
 				Path:    "/update",

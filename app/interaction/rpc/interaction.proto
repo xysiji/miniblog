@@ -10,63 +10,65 @@ message LikeRequest {
 }
 message LikeResponse {}
 
-// 新增：取消点赞相关
 message UnlikeRequest {
   int64 user_id = 1;
   int64 post_id = 2;
 }
 message UnlikeResponse {}
 
+message LikedListRequest {
+  int64 user_id = 1;
+}
+message LikedListResponse {
+  repeated int64 post_ids = 1;
+}
+
 // --- 评论相关 ---
 message CommentRequest {
   int64 user_id = 1;
   int64 post_id = 2;
   string content = 3;
+  int64 root_id = 4;          // 根评论ID (0为顶级评论)
+  int64 parent_id = 5;        // 父评论ID
+  int64 reply_to_user_id = 6; // 被回复人ID
 }
 message CommentResponse {
-  int64 comment_id = 1; // 返回生成的评论ID
+  int64 comment_id = 1;
 }
 
-// 新增：删除评论相关
 message CommentDeleteRequest {
   int64 user_id = 1;
   int64 comment_id = 2;
 }
 message CommentDeleteResponse {}
 
-// --- 新增：评论列表相关 ---
+// --- 评论列表相关 ---
 message CommentItem {
-    int64 id = 1;
-    int64 post_id = 2;
-    int64 user_id = 3;
-    string content = 4;
-    int64 create_time = 5;
+  int64 id = 1;
+  int64 post_id = 2;
+  int64 user_id = 3;
+  string content = 4;
+  int64 create_time = 5;
+  int64 root_id = 6;          // 根评论ID
+  int64 parent_id = 7;        // 父评论ID
+  int64 reply_to_user_id = 8; // 被回复人ID
 }
 
 message CommentListRequest {
-    int64 post_id = 1;
-    int64 page = 2;
-    int64 page_size = 3;
+  int64 post_id = 1;
+  int64 page = 2;
+  int64 page_size = 3;
 }
 message CommentListResponse {
-    repeated CommentItem list = 1;
-    int64 total = 2;
+  repeated CommentItem list = 1;
+  int64 total = 2;
 }
 
-// 互动服务
 service Interaction {
-  // 点赞
   rpc Like(LikeRequest) returns(LikeResponse);
-  
-  // 新增：取消点赞
   rpc Unlike(UnlikeRequest) returns(UnlikeResponse);
-  
-  // 发表评论
   rpc Comment(CommentRequest) returns(CommentResponse);
-  
-  // 新增：删除评论
   rpc CommentDelete(CommentDeleteRequest) returns(CommentDeleteResponse);
-  
-  // 获取评论列表
   rpc CommentList(CommentListRequest) returns(CommentListResponse);
+  rpc LikedList(LikedListRequest) returns(LikedListResponse);
 }

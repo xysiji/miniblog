@@ -11,27 +11,38 @@ type CommentDeleteResp struct {
 }
 
 type CommentItem struct {
-	Id         int64  `json:"id"`
-	PostId     int64  `json:"post_id"`
-	UserId     int64  `json:"user_id"`
-	Content    string `json:"content"`
-	CreateTime int64  `json:"create_time"`
+	Id            int64          `json:"id"`
+	PostId        int64          `json:"post_id"`
+	UserId        int64          `json:"user_id"`
+	Username      string         `json:"username"` // 聚合层补齐
+	Avatar        string         `json:"avatar"`   // 聚合层补齐
+	Content       string         `json:"content"`
+	CreateTime    int64          `json:"create_time"`
+	RootId        int64          `json:"root_id"`   // 根评论ID
+	ParentId      int64          `json:"parent_id"` // 父评论ID
+	ReplyToUserId int64          `json:"reply_to_user_id"`
+	ReplyToName   string         `json:"reply_to_name"`  // 聚合层补齐
+	Children      []*CommentItem `json:"children"`       // 嵌套子评论列表 (楼中楼)
+	ChildrenCount int64          `json:"children_count"` // 子评论总数
 }
 
 type CommentListReq struct {
 	PostId   int64 `json:"post_id"`
-	Page     int64 `json:"page,optional"`      // 当前页码
-	PageSize int64 `json:"page_size,optional"` // 每页条数
+	Page     int64 `json:"page,optional"`
+	PageSize int64 `json:"page_size,optional"`
 }
 
 type CommentListResp struct {
-	List  []CommentItem `json:"list"`
-	Total int64         `json:"total"`
+	List  []*CommentItem `json:"list"`
+	Total int64          `json:"total"`
 }
 
 type CommentReq struct {
-	PostId  int64  `json:"post_id"`
-	Content string `json:"content"`
+	PostId        int64  `json:"post_id"`
+	Content       string `json:"content"`
+	RootId        int64  `json:"root_id,optional"`          // 归属的根评论ID (不传或0表示一级主评论)
+	ParentId      int64  `json:"parent_id,optional"`        // 回复的具体父评论ID
+	ReplyToUserId int64  `json:"reply_to_user_id,optional"` // 被回复人ID
 }
 
 type CommentResp struct {
