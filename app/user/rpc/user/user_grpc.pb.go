@@ -19,23 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	User_Register_FullMethodName   = "/user.User/Register"
-	User_Login_FullMethodName      = "/user.User/Login"
-	User_UserInfo_FullMethodName   = "/user.User/UserInfo"
-	User_UserUpdate_FullMethodName = "/user.User/UserUpdate"
+	User_Register_FullMethodName         = "/user.User/Register"
+	User_Login_FullMethodName            = "/user.User/Login"
+	User_UserInfo_FullMethodName         = "/user.User/UserInfo"
+	User_UserUpdate_FullMethodName       = "/user.User/UserUpdate"
+	User_BatchGetUserInfo_FullMethodName = "/user.User/BatchGetUserInfo"
 )
 
 // UserClient is the client API for User service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// 用户基础服务
 type UserClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	// 新增的 RPC 接口
 	UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 	UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error)
+	// 【新增】批量查询 RPC 方法
+	BatchGetUserInfo(ctx context.Context, in *BatchUserInfoReq, opts ...grpc.CallOption) (*BatchUserInfoResp, error)
 }
 
 type userClient struct {
@@ -86,17 +86,26 @@ func (c *userClient) UserUpdate(ctx context.Context, in *UserUpdateRequest, opts
 	return out, nil
 }
 
+func (c *userClient) BatchGetUserInfo(ctx context.Context, in *BatchUserInfoReq, opts ...grpc.CallOption) (*BatchUserInfoResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchUserInfoResp)
+	err := c.cc.Invoke(ctx, User_BatchGetUserInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility.
-//
-// 用户基础服务
 type UserServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	// 新增的 RPC 接口
 	UserInfo(context.Context, *UserInfoRequest) (*UserInfoResponse, error)
 	UserUpdate(context.Context, *UserUpdateRequest) (*UserUpdateResponse, error)
+	// 【新增】批量查询 RPC 方法
+	BatchGetUserInfo(context.Context, *BatchUserInfoReq) (*BatchUserInfoResp, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -118,6 +127,9 @@ func (UnimplementedUserServer) UserInfo(context.Context, *UserInfoRequest) (*Use
 }
 func (UnimplementedUserServer) UserUpdate(context.Context, *UserUpdateRequest) (*UserUpdateResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UserUpdate not implemented")
+}
+func (UnimplementedUserServer) BatchGetUserInfo(context.Context, *BatchUserInfoReq) (*BatchUserInfoResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method BatchGetUserInfo not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 func (UnimplementedUserServer) testEmbeddedByValue()              {}
@@ -212,6 +224,24 @@ func _User_UserUpdate_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_BatchGetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUserInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).BatchGetUserInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_BatchGetUserInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).BatchGetUserInfo(ctx, req.(*BatchUserInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -234,6 +264,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserUpdate",
 			Handler:    _User_UserUpdate_Handler,
+		},
+		{
+			MethodName: "BatchGetUserInfo",
+			Handler:    _User_BatchGetUserInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -19,28 +19,31 @@ type DetailResp struct {
 }
 
 type ListReq struct {
-	Page     int64 `json:"page"`     // 第几页
-	PageSize int64 `json:"pageSize"` // 每页多少条
+	Page     int64 `json:"page"`
+	PageSize int64 `json:"pageSize"`
 }
 
 type ListResp struct {
-	List  []PostItem `json:"list"`  // 博文数组
-	Total int64      `json:"total"` // 总条数
+	List  []PostItem `json:"list"`
+	Total int64      `json:"total"`
 }
 
 type PostItem struct {
 	Id           int64    `json:"id"`
 	UserId       int64    `json:"userId"`
+	AuthorName   string   `json:"authorName"`
+	AuthorAvatar string   `json:"authorAvatar"`
 	Content      string   `json:"content"`
-	Images       []string `json:"images"`        // 新增：博文图片
-	LikeCount    int64    `json:"like_count"`    // 【网关新增】
-	CommentCount int64    `json:"comment_count"` // 【网关新增】
-	CreateAt     string   `json:"createAt"`      // 返回友好的时间格式
+	Images       []string `json:"images"`
+	LikeCount    int64    `json:"like_count"`
+	CommentCount int64    `json:"comment_count"`
+	IsLiked      bool     `json:"is_liked"`
+	CreateAt     string   `json:"createAt"`
 }
 
 type PublishReq struct {
 	Content string   `json:"content"`
-	Images  []string `json:"images,optional"` // 新增：支持多张图片链接
+	Images  []string `json:"images,optional"`
 }
 
 type PublishResp struct {

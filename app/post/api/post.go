@@ -12,6 +12,7 @@ import (
 
 	"miniblog/app/post/api/internal/config"
 	"miniblog/app/post/api/internal/handler"
+	"miniblog/app/post/api/internal/middleware" // 新增引入
 	"miniblog/app/post/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -31,16 +32,10 @@ type AccessLog struct {
 // DataAnalysisMiddleware 全局数据分析拦截器 (埋点)
 func DataAnalysisMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 1. 记录请求开始时间
 		startTime := time.Now()
-
-		// 2. 放行请求，执行实际的业务逻辑 (比如拉取列表、发布博文)
 		next(w, r)
-
-		// 3. 计算接口耗时 (微秒)
 		duration := time.Since(startTime).Microseconds()
 
-		// 4. 组装日志数据
 		logData := AccessLog{
 			Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 			Method:    r.Method,
@@ -48,10 +43,8 @@ func DataAnalysisMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			Duration:  duration,
 		}
 
-		// 5. 将日志转为 JSON 并异步写入本地文件 (不阻塞正常请求)
 		go func(data AccessLog) {
 			logBytes, _ := json.Marshal(data)
-			// 打开或创建埋点日志文件 (追加模式)
 			file, err := os.OpenFile("data_analysis.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 			if err == nil {
 				defer file.Close()
@@ -67,16 +60,19 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	//server := rest.MustNewServer(c.RestConf)
 	server := rest.MustNewServer(c.RestConf, rest.WithCors())
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)
 
 	// ===============================================
-	// 新增：挂载全局数据分析中间件 (所有经过 post-api 的请求都会被埋点采集)
-	// ===============================================
+	// 1. 挂载数据分析埋点中间件
 	server.Use(DataAnalysisMiddleware)
+
+	// 2. 挂载我们新写的全局弱认证中间件 (解析 Token 但不阻拦)
+	softAuth := middleware.NewSoftAuthMiddleware(c.Auth.AccessSecret)
+	server.Use(softAuth.Handle)
+	// ===============================================
 
 	handler.RegisterHandlers(server, ctx)
 

@@ -3,7 +3,6 @@ syntax = "proto3";
 package user;
 option go_package = "./user";
 
-// --- 原有逻辑 ---
 message RegisterRequest {
   string username = 1;
   string password = 2;
@@ -22,7 +21,6 @@ message LoginResponse {
   int64 user_id = 1;
 }
 
-// --- 新增：获取用户信息 ---
 message UserInfoRequest {
   int64 user_id = 1;
 }
@@ -34,7 +32,16 @@ message UserInfoResponse {
   string bio = 4;
 }
 
-// --- 新增：更新用户信息 ---
+// ============== 【核心新增】批量获取用户信息 ==============
+message BatchUserInfoReq {
+  repeated int64 user_ids = 1;
+}
+
+message BatchUserInfoResp {
+  map<int64, UserInfoResponse> users = 1;
+}
+// =========================================================
+
 message UserUpdateRequest {
   int64 user_id = 1;
   string avatar = 2;
@@ -44,12 +51,11 @@ message UserUpdateRequest {
 message UserUpdateResponse {
 }
 
-// 用户基础服务
 service User {
   rpc Register(RegisterRequest) returns(RegisterResponse);
   rpc Login(LoginRequest) returns(LoginResponse);
-  
-  // 新增的 RPC 接口
   rpc UserInfo(UserInfoRequest) returns(UserInfoResponse);
   rpc UserUpdate(UserUpdateRequest) returns(UserUpdateResponse);
+  // 【新增】批量查询 RPC 方法
+  rpc BatchGetUserInfo(BatchUserInfoReq) returns(BatchUserInfoResp);
 }

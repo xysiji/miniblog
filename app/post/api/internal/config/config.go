@@ -10,8 +10,10 @@ import (
 
 type Config struct {
 	rest.RestConf
-	PostRpc zrpc.RpcClientConf
-	Auth    struct { // 映射 JWT 配置
+	PostRpc        zrpc.RpcClientConf
+	UserRpc        zrpc.RpcClientConf // 【新增】映射 YAML 里的 UserRpc
+	InteractionRpc zrpc.RpcClientConf // 【新增】映射 YAML 里的 InteractionRpc
+	Auth           struct {           // 映射 JWT 配置
 		AccessSecret string
 		AccessExpire int64
 	}

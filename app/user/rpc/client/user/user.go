@@ -2,7 +2,7 @@
 // goctl 1.9.2
 // Source: user.proto
 
-package userclient
+package user
 
 import (
 	"context"
@@ -14,6 +14,8 @@ import (
 )
 
 type (
+	BatchUserInfoReq   = user.BatchUserInfoReq
+	BatchUserInfoResp  = user.BatchUserInfoResp
 	LoginRequest       = user.LoginRequest
 	LoginResponse      = user.LoginResponse
 	RegisterRequest    = user.RegisterRequest
@@ -22,16 +24,13 @@ type (
 	UserInfoResponse   = user.UserInfoResponse
 	UserUpdateRequest  = user.UserUpdateRequest
 	UserUpdateResponse = user.UserUpdateResponse
-	// 【新增的类型映射】
-	BatchUserInfoReq  = user.BatchUserInfoReq
-	BatchUserInfoResp = user.BatchUserInfoResp
 
 	User interface {
 		Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 		Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 		UserInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
 		UserUpdate(ctx context.Context, in *UserUpdateRequest, opts ...grpc.CallOption) (*UserUpdateResponse, error)
-		// 【新增的接口方法】
+		// 【新增】批量查询 RPC 方法
 		BatchGetUserInfo(ctx context.Context, in *BatchUserInfoReq, opts ...grpc.CallOption) (*BatchUserInfoResp, error)
 	}
 
@@ -66,7 +65,7 @@ func (m *defaultUser) UserUpdate(ctx context.Context, in *UserUpdateRequest, opt
 	return client.UserUpdate(ctx, in, opts...)
 }
 
-// ============== 【绝对新增的客户端调用实现】 ==============
+// 【新增】批量查询 RPC 方法
 func (m *defaultUser) BatchGetUserInfo(ctx context.Context, in *BatchUserInfoReq, opts ...grpc.CallOption) (*BatchUserInfoResp, error) {
 	client := user.NewUserClient(m.cli.Conn())
 	return client.BatchGetUserInfo(ctx, in, opts...)

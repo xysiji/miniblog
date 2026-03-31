@@ -15,6 +15,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 删除微型博客
+				Method:  http.MethodPost,
+				Path:    "/delete",
+				Handler: DeleteHandler(serverCtx),
+			},
+			{
 				// 获取单条博文详情
 				Method:  http.MethodPost,
 				Path:    "/detail",
@@ -26,18 +32,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/list",
 				Handler: ListHandler(serverCtx),
 			},
-		},
-		rest.WithPrefix("/v1/post"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 删除微型博客
-				Method:  http.MethodPost,
-				Path:    "/delete",
-				Handler: DeleteHandler(serverCtx),
-			},
 			{
 				// 发布微型博客
 				Method:  http.MethodPost,
@@ -45,7 +39,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: PublishHandler(serverCtx),
 			},
 		},
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/v1/post"),
 	)
 }

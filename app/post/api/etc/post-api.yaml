@@ -4,6 +4,12 @@ Port: 8889
 # 指向本地的 Post RPC
 PostRpc:
   Target: 127.0.0.1:8081
+# 【绝对新增】：指向本地的 User RPC (对应 user.yaml 的 8080 端口)
+UserRpc:
+  Target: 127.0.0.1:8080
+# 【绝对新增】：指向本地的 Interaction RPC (对应 interaction.yaml 的 8082 端口)
+InteractionRpc:
+  Target: 127.0.0.1:8082
 # 核心鉴权：秘钥必须和 User 服务一模一样，否则无法解析 Token
 Auth:
   AccessSecret: u7x9A2f8P5vQ3mR1wT6kY4zL0bC9eD2h # 👈 必须统一

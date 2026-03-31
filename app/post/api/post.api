@@ -1,38 +1,40 @@
 syntax = "v1"
 
-// 发布相关的结构体
 type (
 	PublishReq {
 		Content string   `json:"content"`
-		Images  []string `json:"images,optional"` // 新增：支持多张图片链接
+		Images  []string `json:"images,optional"`
 	}
 	PublishResp {
 		PostId int64 `json:"postId"`
 	}
 )
 
-// 新增：列表相关的结构体 (支持分页)
 type (
 	PostItem {
-		Id           int64    `json:"id"`
-		UserId       int64    `json:"userId"`
+		Id     int64 `json:"id"`
+		UserId int64 `json:"userId"`
+		// 【网关聚合字段】
+		AuthorName   string   `json:"authorName"`
+		AuthorAvatar string   `json:"authorAvatar"`
 		Content      string   `json:"content"`
-		Images       []string `json:"images"` // 新增：博文图片
-		LikeCount    int64    `json:"like_count"` // 【网关新增】
-		CommentCount int64    `json:"comment_count"` // 【网关新增】
-		CreateAt     string   `json:"createAt"` // 返回友好的时间格式
+		Images       []string `json:"images"`
+		LikeCount    int64    `json:"like_count"`
+		CommentCount int64    `json:"comment_count"`
+		// 【核心新增】：当前用户点赞状态
+		IsLiked  bool   `json:"is_liked"`
+		CreateAt string `json:"createAt"`
 	}
 	ListReq {
-		Page     int64 `json:"page"` // 第几页
-		PageSize int64 `json:"pageSize"` // 每页多少条
+		Page     int64 `json:"page"`
+		PageSize int64 `json:"pageSize"`
 	}
 	ListResp {
-		List  []PostItem `json:"list"` // 博文数组
-		Total int64      `json:"total"` // 总条数
+		List  []PostItem `json:"list"`
+		Total int64      `json:"total"`
 	}
 )
 
-// 新增：博文详情与删除
 type (
 	DetailReq {
 		PostId int64 `json:"post_id"`
@@ -46,14 +48,11 @@ type (
 	DeleteResp  {}
 )
 
-// ==========================
-// 1. 【公开路由组】不需要登录，所有人均可访问广场
-// ==========================
+// 所有博文接口现在都不加 jwt: Auth，由中间件自动识别身份
 @server (
 	prefix: /v1/post
 )
 service post-api {
-	// 新增：获取微型博客列表接口
 	@doc "获取微型博客列表"
 	@handler ListHandler
 	post /list (ListReq) returns (ListResp)
@@ -61,16 +60,7 @@ service post-api {
 	@doc "获取单条博文详情"
 	@handler DetailHandler
 	post /detail (DetailReq) returns (DetailResp)
-}
 
-// ==========================
-// 2. 【私密路由组】必须携带 Token 才能操作
-// ==========================
-@server (
-	prefix: /v1/post
-	jwt:    Auth
-)
-service post-api {
 	@doc "发布微型博客"
 	@handler PublishHandler
 	post /publish (PublishReq) returns (PublishResp)

@@ -21,7 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// --- 原有逻辑 ---
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
@@ -214,7 +213,6 @@ func (x *LoginResponse) GetUserId() int64 {
 	return 0
 }
 
-// --- 新增：获取用户信息 ---
 type UserInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -327,7 +325,95 @@ func (x *UserInfoResponse) GetBio() string {
 	return ""
 }
 
-// --- 新增：更新用户信息 ---
+// ============== 【核心新增】批量获取用户信息 ==============
+type BatchUserInfoReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserIds       []int64                `protobuf:"varint,1,rep,packed,name=user_ids,json=userIds,proto3" json:"user_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchUserInfoReq) Reset() {
+	*x = BatchUserInfoReq{}
+	mi := &file_user_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchUserInfoReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchUserInfoReq) ProtoMessage() {}
+
+func (x *BatchUserInfoReq) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchUserInfoReq.ProtoReflect.Descriptor instead.
+func (*BatchUserInfoReq) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *BatchUserInfoReq) GetUserIds() []int64 {
+	if x != nil {
+		return x.UserIds
+	}
+	return nil
+}
+
+type BatchUserInfoResp struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	Users         map[int64]*UserInfoResponse `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchUserInfoResp) Reset() {
+	*x = BatchUserInfoResp{}
+	mi := &file_user_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchUserInfoResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchUserInfoResp) ProtoMessage() {}
+
+func (x *BatchUserInfoResp) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchUserInfoResp.ProtoReflect.Descriptor instead.
+func (*BatchUserInfoResp) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *BatchUserInfoResp) GetUsers() map[int64]*UserInfoResponse {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
 type UserUpdateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -339,7 +425,7 @@ type UserUpdateRequest struct {
 
 func (x *UserUpdateRequest) Reset() {
 	*x = UserUpdateRequest{}
-	mi := &file_user_proto_msgTypes[6]
+	mi := &file_user_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -351,7 +437,7 @@ func (x *UserUpdateRequest) String() string {
 func (*UserUpdateRequest) ProtoMessage() {}
 
 func (x *UserUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[6]
+	mi := &file_user_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +450,7 @@ func (x *UserUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserUpdateRequest.ProtoReflect.Descriptor instead.
 func (*UserUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{6}
+	return file_user_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *UserUpdateRequest) GetUserId() int64 {
@@ -396,7 +482,7 @@ type UserUpdateResponse struct {
 
 func (x *UserUpdateResponse) Reset() {
 	*x = UserUpdateResponse{}
-	mi := &file_user_proto_msgTypes[7]
+	mi := &file_user_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -408,7 +494,7 @@ func (x *UserUpdateResponse) String() string {
 func (*UserUpdateResponse) ProtoMessage() {}
 
 func (x *UserUpdateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[7]
+	mi := &file_user_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -421,7 +507,7 @@ func (x *UserUpdateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserUpdateResponse.ProtoReflect.Descriptor instead.
 func (*UserUpdateResponse) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{7}
+	return file_user_proto_rawDescGZIP(), []int{9}
 }
 
 var File_user_proto protoreflect.FileDescriptor
@@ -446,18 +532,27 @@ const file_user_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x16\n" +
 	"\x06avatar\x18\x03 \x01(\tR\x06avatar\x12\x10\n" +
-	"\x03bio\x18\x04 \x01(\tR\x03bio\"V\n" +
+	"\x03bio\x18\x04 \x01(\tR\x03bio\"-\n" +
+	"\x10BatchUserInfoReq\x12\x19\n" +
+	"\buser_ids\x18\x01 \x03(\x03R\auserIds\"\x9f\x01\n" +
+	"\x11BatchUserInfoResp\x128\n" +
+	"\x05users\x18\x01 \x03(\v2\".user.BatchUserInfoResp.UsersEntryR\x05users\x1aP\n" +
+	"\n" +
+	"UsersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12,\n" +
+	"\x05value\x18\x02 \x01(\v2\x16.user.UserInfoResponseR\x05value:\x028\x01\"V\n" +
 	"\x11UserUpdateRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06avatar\x18\x02 \x01(\tR\x06avatar\x12\x10\n" +
 	"\x03bio\x18\x03 \x01(\tR\x03bio\"\x14\n" +
-	"\x12UserUpdateResponse2\xef\x01\n" +
+	"\x12UserUpdateResponse2\xb4\x02\n" +
 	"\x04User\x129\n" +
 	"\bRegister\x12\x15.user.RegisterRequest\x1a\x16.user.RegisterResponse\x120\n" +
 	"\x05Login\x12\x12.user.LoginRequest\x1a\x13.user.LoginResponse\x129\n" +
 	"\bUserInfo\x12\x15.user.UserInfoRequest\x1a\x16.user.UserInfoResponse\x12?\n" +
 	"\n" +
-	"UserUpdate\x12\x17.user.UserUpdateRequest\x1a\x18.user.UserUpdateResponseB\bZ\x06./userb\x06proto3"
+	"UserUpdate\x12\x17.user.UserUpdateRequest\x1a\x18.user.UserUpdateResponse\x12C\n" +
+	"\x10BatchGetUserInfo\x12\x16.user.BatchUserInfoReq\x1a\x17.user.BatchUserInfoRespB\bZ\x06./userb\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
@@ -471,7 +566,7 @@ func file_user_proto_rawDescGZIP() []byte {
 	return file_user_proto_rawDescData
 }
 
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_user_proto_goTypes = []any{
 	(*RegisterRequest)(nil),    // 0: user.RegisterRequest
 	(*RegisterResponse)(nil),   // 1: user.RegisterResponse
@@ -479,23 +574,30 @@ var file_user_proto_goTypes = []any{
 	(*LoginResponse)(nil),      // 3: user.LoginResponse
 	(*UserInfoRequest)(nil),    // 4: user.UserInfoRequest
 	(*UserInfoResponse)(nil),   // 5: user.UserInfoResponse
-	(*UserUpdateRequest)(nil),  // 6: user.UserUpdateRequest
-	(*UserUpdateResponse)(nil), // 7: user.UserUpdateResponse
+	(*BatchUserInfoReq)(nil),   // 6: user.BatchUserInfoReq
+	(*BatchUserInfoResp)(nil),  // 7: user.BatchUserInfoResp
+	(*UserUpdateRequest)(nil),  // 8: user.UserUpdateRequest
+	(*UserUpdateResponse)(nil), // 9: user.UserUpdateResponse
+	nil,                        // 10: user.BatchUserInfoResp.UsersEntry
 }
 var file_user_proto_depIdxs = []int32{
-	0, // 0: user.User.Register:input_type -> user.RegisterRequest
-	2, // 1: user.User.Login:input_type -> user.LoginRequest
-	4, // 2: user.User.UserInfo:input_type -> user.UserInfoRequest
-	6, // 3: user.User.UserUpdate:input_type -> user.UserUpdateRequest
-	1, // 4: user.User.Register:output_type -> user.RegisterResponse
-	3, // 5: user.User.Login:output_type -> user.LoginResponse
-	5, // 6: user.User.UserInfo:output_type -> user.UserInfoResponse
-	7, // 7: user.User.UserUpdate:output_type -> user.UserUpdateResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	10, // 0: user.BatchUserInfoResp.users:type_name -> user.BatchUserInfoResp.UsersEntry
+	5,  // 1: user.BatchUserInfoResp.UsersEntry.value:type_name -> user.UserInfoResponse
+	0,  // 2: user.User.Register:input_type -> user.RegisterRequest
+	2,  // 3: user.User.Login:input_type -> user.LoginRequest
+	4,  // 4: user.User.UserInfo:input_type -> user.UserInfoRequest
+	8,  // 5: user.User.UserUpdate:input_type -> user.UserUpdateRequest
+	6,  // 6: user.User.BatchGetUserInfo:input_type -> user.BatchUserInfoReq
+	1,  // 7: user.User.Register:output_type -> user.RegisterResponse
+	3,  // 8: user.User.Login:output_type -> user.LoginResponse
+	5,  // 9: user.User.UserInfo:output_type -> user.UserInfoResponse
+	9,  // 10: user.User.UserUpdate:output_type -> user.UserUpdateResponse
+	7,  // 11: user.User.BatchGetUserInfo:output_type -> user.BatchUserInfoResp
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }
@@ -509,7 +611,7 @@ func file_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_proto_rawDesc), len(file_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
