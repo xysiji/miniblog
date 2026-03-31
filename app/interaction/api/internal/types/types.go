@@ -4,6 +4,7 @@
 package types
 
 type CommentDeleteReq struct {
+	PostId    int64 `json:"post_id"` // 核心：分表路由键
 	CommentId int64 `json:"comment_id"`
 }
 
@@ -14,16 +15,16 @@ type CommentItem struct {
 	Id            int64          `json:"id"`
 	PostId        int64          `json:"post_id"`
 	UserId        int64          `json:"user_id"`
-	Username      string         `json:"username"` // 聚合层补齐
-	Avatar        string         `json:"avatar"`   // 聚合层补齐
+	Username      string         `json:"username"`
+	Avatar        string         `json:"avatar"`
 	Content       string         `json:"content"`
 	CreateTime    int64          `json:"create_time"`
-	RootId        int64          `json:"root_id"`   // 根评论ID
-	ParentId      int64          `json:"parent_id"` // 父评论ID
+	RootId        int64          `json:"root_id"`
+	ParentId      int64          `json:"parent_id"`
 	ReplyToUserId int64          `json:"reply_to_user_id"`
-	ReplyToName   string         `json:"reply_to_name"`  // 聚合层补齐
-	Children      []*CommentItem `json:"children"`       // 嵌套子评论列表 (楼中楼)
-	ChildrenCount int64          `json:"children_count"` // 子评论总数
+	ReplyToName   string         `json:"reply_to_name"`
+	Children      []*CommentItem `json:"children"`
+	ChildrenCount int64          `json:"children_count"`
 }
 
 type CommentListReq struct {
@@ -40,13 +41,13 @@ type CommentListResp struct {
 type CommentReq struct {
 	PostId        int64  `json:"post_id"`
 	Content       string `json:"content"`
-	RootId        int64  `json:"root_id,optional"`          // 归属的根评论ID (不传或0表示一级主评论)
-	ParentId      int64  `json:"parent_id,optional"`        // 回复的具体父评论ID
-	ReplyToUserId int64  `json:"reply_to_user_id,optional"` // 被回复人ID
+	RootId        int64  `json:"root_id,optional"`
+	ParentId      int64  `json:"parent_id,optional"`
+	ReplyToUserId int64  `json:"reply_to_user_id,optional"`
 }
 
 type CommentResp struct {
-	CommentId int64 `json:"comment_id"` // 雪花算法生成的ID
+	CommentId int64 `json:"comment_id"`
 }
 
 type LikeReq struct {
@@ -60,7 +61,7 @@ type LikedListReq struct {
 }
 
 type LikedListResp struct {
-	PostIds []int64 `json:"post_ids"` // 当前用户点赞过的所有博文ID
+	PostIds []int64 `json:"post_ids"`
 }
 
 type UnlikeReq struct {

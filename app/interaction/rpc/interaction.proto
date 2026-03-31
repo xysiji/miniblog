@@ -3,7 +3,6 @@ syntax = "proto3";
 package interaction;
 option go_package = "./interaction";
 
-// --- 点赞相关 ---
 message LikeRequest {
   int64 user_id = 1;
   int64 post_id = 2;
@@ -16,21 +15,13 @@ message UnlikeRequest {
 }
 message UnlikeResponse {}
 
-message LikedListRequest {
-  int64 user_id = 1;
-}
-message LikedListResponse {
-  repeated int64 post_ids = 1;
-}
-
-// --- 评论相关 ---
 message CommentRequest {
   int64 user_id = 1;
   int64 post_id = 2;
   string content = 3;
-  int64 root_id = 4;          // 根评论ID (0为顶级评论)
-  int64 parent_id = 5;        // 父评论ID
-  int64 reply_to_user_id = 6; // 被回复人ID
+  int64 root_id = 4;
+  int64 parent_id = 5;
+  int64 reply_to_user_id = 6;
 }
 message CommentResponse {
   int64 comment_id = 1;
@@ -39,19 +30,19 @@ message CommentResponse {
 message CommentDeleteRequest {
   int64 user_id = 1;
   int64 comment_id = 2;
+  int64 post_id = 3; // 核心：增加分表路由参数
 }
 message CommentDeleteResponse {}
 
-// --- 评论列表相关 ---
 message CommentItem {
   int64 id = 1;
   int64 post_id = 2;
   int64 user_id = 3;
   string content = 4;
   int64 create_time = 5;
-  int64 root_id = 6;          // 根评论ID
-  int64 parent_id = 7;        // 父评论ID
-  int64 reply_to_user_id = 8; // 被回复人ID
+  int64 root_id = 6;
+  int64 parent_id = 7;
+  int64 reply_to_user_id = 8;
 }
 
 message CommentListRequest {
@@ -62,6 +53,13 @@ message CommentListRequest {
 message CommentListResponse {
   repeated CommentItem list = 1;
   int64 total = 2;
+}
+
+message LikedListRequest {
+  int64 user_id = 1;
+}
+message LikedListResponse {
+  repeated int64 post_ids = 1;
 }
 
 service Interaction {
